@@ -1,0 +1,15 @@
+.env
+.claude/
+venv/
+data/raw/
+data/embeddings/
+data/ceip.db
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.db
+logs/
+*.egg-info/
+dist/
+.pytest_cache/

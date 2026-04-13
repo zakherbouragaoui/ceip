@@ -1,0 +1,222 @@
+[
+  {
+    "id": "E001",
+    "question": "Does removing introduced predators from islands benefit nesting seabirds?",
+    "expected_intervention": "Remove or control introduced predators",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "birds",
+    "geography": "global islands",
+    "ce_synopsis": "Bird Conservation"
+  },
+  {
+    "id": "E002",
+    "question": "Is coral transplantation effective for restoring degraded reef systems?",
+    "expected_intervention": "Transplant coral fragments onto degraded reefs",
+    "expected_ce_category": "Unknown Effectiveness",
+    "expected_direction": "mixed",
+    "expected_confidence": "weak",
+    "species_group": "invertebrates",
+    "geography": "Indo-Pacific and Caribbean",
+    "ce_synopsis": "Subtidal Benthic Invertebrate Conservation"
+  },
+  {
+    "id": "E003",
+    "question": "Do beehive fences reduce crop-raiding by elephants in East Africa?",
+    "expected_intervention": "Use beehive fences to deter elephants from crops",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "mammals",
+    "geography": "Kenya and Tanzania",
+    "ce_synopsis": "Terrestrial Mammal Conservation"
+  },
+  {
+    "id": "E004",
+    "question": "Does creating or restoring farm ponds help amphibian populations recover?",
+    "expected_intervention": "Create or restore ponds for amphibians",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "reptiles",
+    "geography": "Europe",
+    "ce_synopsis": "Amphibian Conservation"
+  },
+  {
+    "id": "E005",
+    "question": "Are marine no-take zones effective at increasing fish biomass?",
+    "expected_intervention": "Designate no-take marine reserves",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "fish",
+    "geography": "global",
+    "ce_synopsis": "Marine and Freshwater Conservation"
+  },
+  {
+    "id": "E006",
+    "question": "Does planting wildflower strips on farmland increase pollinator abundance?",
+    "expected_intervention": "Plant wildflower strips on farmland",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "invertebrates",
+    "geography": "Western Europe",
+    "ce_synopsis": "Bee Conservation"
+  },
+  {
+    "id": "E007",
+    "question": "What is the evidence for wolf reintroduction causing trophic cascades that restore vegetation?",
+    "expected_intervention": "Reintroduce wolves to restore ecosystem function",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "mammals",
+    "geography": "United States (Yellowstone)",
+    "ce_synopsis": "Terrestrial Mammal Conservation"
+  },
+  {
+    "id": "E008",
+    "question": "Does relocating sea turtle nests to hatcheries improve hatching success?",
+    "expected_intervention": "Relocate nests to hatcheries or protected areas",
+    "expected_ce_category": "Trade-off",
+    "expected_direction": "mixed",
+    "expected_confidence": "moderate",
+    "species_group": "reptiles",
+    "geography": "global tropical coasts",
+    "ce_synopsis": "Reptile Conservation"
+  },
+  {
+    "id": "E009",
+    "question": "Is dam removal effective for restoring Atlantic salmon migration routes?",
+    "expected_intervention": "Remove dams or barriers to fish migration",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "fish",
+    "geography": "North America and Europe",
+    "ce_synopsis": "Marine and Freshwater Conservation"
+  },
+  {
+    "id": "E010",
+    "question": "Does providing artificial nest boxes increase bat populations in managed forests?",
+    "expected_intervention": "Provide artificial roost sites for bats",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "mammals",
+    "geography": "Europe and North America",
+    "ce_synopsis": "Bat Conservation"
+  },
+  {
+    "id": "E011",
+    "question": "Is controlled burning effective for maintaining grassland biodiversity in African savannas?",
+    "expected_intervention": "Use prescribed burning to manage habitat",
+    "expected_ce_category": "Trade-off",
+    "expected_direction": "mixed",
+    "expected_confidence": "moderate",
+    "species_group": "plants",
+    "geography": "Sub-Saharan Africa",
+    "ce_synopsis": "Shrubland and Heathland Conservation"
+  },
+  {
+    "id": "E012",
+    "question": "Does banning diclofenac in livestock reduce vulture mortality in South Asia?",
+    "expected_intervention": "Ban veterinary use of non-steroidal anti-inflammatory drugs toxic to vultures",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "birds",
+    "geography": "India, Nepal, Pakistan",
+    "ce_synopsis": "Bird Conservation"
+  },
+  {
+    "id": "E013",
+    "question": "Are livestock insurance schemes effective for reducing retaliatory killing of snow leopards?",
+    "expected_intervention": "Compensate farmers for livestock losses to predators",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "mammals",
+    "geography": "Central Asia (Mongolia, Nepal, India)",
+    "ce_synopsis": "Terrestrial Mammal Conservation"
+  },
+  {
+    "id": "E014",
+    "question": "Does hedgerow planting on farmland benefit bird populations in the UK?",
+    "expected_intervention": "Plant or restore hedgerows on farmland",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "birds",
+    "geography": "United Kingdom",
+    "ce_synopsis": "Farmland Conservation"
+  },
+  {
+    "id": "E015",
+    "question": "Does mangrove replanting restore fish nursery habitat in Southeast Asia?",
+    "expected_intervention": "Replant mangroves to restore coastal habitat",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "fish",
+    "geography": "Southeast Asia",
+    "ce_synopsis": "Forest Conservation"
+  },
+  {
+    "id": "E016",
+    "question": "Is captive breeding and release effective for recovering the California condor population?",
+    "expected_intervention": "Breed in captivity and release into the wild",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "birds",
+    "geography": "United States (California, Arizona)",
+    "ce_synopsis": "Bird Conservation"
+  },
+  {
+    "id": "E017",
+    "question": "Do seed banks preserve genetic diversity of threatened plant species effectively?",
+    "expected_intervention": "Collect and store seeds in ex-situ seed banks",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "plants",
+    "geography": "global",
+    "ce_synopsis": "Plant Conservation"
+  },
+  {
+    "id": "E018",
+    "question": "Does rat eradication on islands lead to recovery of native invertebrate communities?",
+    "expected_intervention": "Eradicate invasive rats from islands",
+    "expected_ce_category": "Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "strong",
+    "species_group": "invertebrates",
+    "geography": "New Zealand and Pacific Islands",
+    "ce_synopsis": "Invasive Species Management"
+  },
+  {
+    "id": "E019",
+    "question": "Does dehorning rhinos reduce poaching rates in southern Africa?",
+    "expected_intervention": "Dehorn rhinoceroses to reduce poaching incentive",
+    "expected_ce_category": "Unknown Effectiveness",
+    "expected_direction": "unclear",
+    "expected_confidence": "weak",
+    "species_group": "mammals",
+    "geography": "South Africa and Zimbabwe",
+    "ce_synopsis": "Terrestrial Mammal Conservation"
+  },
+  {
+    "id": "E020",
+    "question": "Are community-managed freshwater reserves effective for conserving river fish diversity in the tropics?",
+    "expected_intervention": "Establish community-managed freshwater protected areas",
+    "expected_ce_category": "Likely Beneficial",
+    "expected_direction": "positive",
+    "expected_confidence": "moderate",
+    "species_group": "fish",
+    "geography": "Southeast Asia and Amazonia",
+    "ce_synopsis": "Marine and Freshwater Conservation"
+  }
+]

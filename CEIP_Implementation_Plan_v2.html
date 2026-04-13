@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEIP — Implementation Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:      #F7F4EE;
+  --cream2:     #EFE9DC;
+  --paper:      #FDFBF7;
+  --ink:        #1C2B1E;
+  --ink-dim:    #4A6050;
+  --ink-faint:  #8A9E8F;
+  --green:      #1E5C36;
+  --green-mid:  #2D7A4A;
+  --green-lite: #D6EDDA;
+  --green-line: #B8D9BF;
+  --amber:      #C4622D;
+  --amber-lite: #FAE8DC;
+  --blue:       #1A3A6B;
+  --blue-lite:  #DDE8F5;
+  --purple:     #4A1E6B;
+  --purple-lite:#EAD9F5;
+  --gold:       #8B6914;
+  --gold-lite:  #FDF3D0;
+  --red:        #8B1A1A;
+  --red-lite:   #FDDEDE;
+  --mono:       'JetBrains Mono', monospace;
+  --serif:      'Source Serif 4', serif;
+  --display:    'Playfair Display', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.75;
+  min-height: 100vh;
+}
+
+/* Graph-paper grid overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(30,92,54,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,92,54,.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── SIDEBAR NAV ── */
+.sidenav {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 220px; background: var(--ink);
+  padding: 32px 0; overflow-y: auto; z-index: 100;
+  display: flex; flex-direction: column;
+}
+.sidenav-logo {
+  padding: 0 24px 28px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 20px;
+}
+.sidenav-logo .logo-text {
+  font-family: var(--display); font-size: 18px;
+  color: #fff; line-height: 1.2;
+}
+.sidenav-logo .logo-sub {
+  font-family: var(--mono); font-size: 9px;
+  color: rgba(255,255,255,.35); letter-spacing: .14em;
+  text-transform: uppercase; margin-top: 4px;
+}
+.nav-section { padding: 0 16px 16px; }
+.nav-section-label {
+  font-family: var(--mono); font-size: 9px;
+  color: rgba(255,255,255,.3); letter-spacing: .16em;
+  text-transform: uppercase; padding: 0 8px 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 5px;
+  text-decoration: none; transition: background .15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(255,255,255,.08); }
+.nav-item.active { background: rgba(45,122,74,.4); }
+.nav-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.nav-item-text { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.65); }
+.nav-item:hover .nav-item-text { color: #fff; }
+.nav-item.active .nav-item-text { color: #fff; }
+
+.sidenav-footer {
+  margin-top: auto; padding: 16px 24px 0;
+  border-top: 1px solid rgba(255,255,255,.06);
+  font-family: var(--mono); font-size: 9px;
+  color: rgba(255,255,255,.2); letter-spacing: .08em;
+}
+
+/* ── MAIN CONTENT ── */
+main {
+  margin-left: 220px;
+  min-height: 100vh;
+  position: relative; z-index: 1;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  padding: 64px 64px 56px;
+  position: relative; overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: 0; left: 64px; right: 64px;
+  height: 1px; background: linear-gradient(90deg, transparent, var(--green-mid), transparent);
+}
+.hero-label {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--green-mid); margin-bottom: 16px;
+}
+.hero-title {
+  font-family: var(--display); font-size: clamp(32px,4vw,52px);
+  color: #fff; line-height: 1.15; max-width: 700px;
+}
+.hero-title em { color: #7EC89A; font-style: italic; }
+.hero-sub {
+  margin-top: 18px; max-width: 620px;
+  color: rgba(255,255,255,.5); font-size: 15px;
+  font-style: italic;
+}
+.hero-pills {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px;
+}
+.pill {
+  font-family: var(--mono); font-size: 10px;
+  padding: 5px 14px; border-radius: 3px;
+  letter-spacing: .06em;
+}
+.pill-green  { background: rgba(45,122,74,.25); color: #7EC89A; border: 1px solid rgba(45,122,74,.4); }
+.pill-amber  { background: rgba(196,98,45,.2);  color: #F0A070; border: 1px solid rgba(196,98,45,.35); }
+.pill-blue   { background: rgba(26,58,107,.3);  color: #90BAF0; border: 1px solid rgba(26,58,107,.5); }
+.pill-purple { background: rgba(74,30,107,.3);  color: #C090F0; border: 1px solid rgba(74,30,107,.5); }
+
+/* ── ARCHITECTURE OVERVIEW ── */
+.arch-section {
+  background: var(--paper);
+  border-bottom: 1px solid var(--cream2);
+  padding: 48px 64px;
+}
+.arch-title {
+  font-family: var(--display); font-size: 22px;
+  color: var(--ink); margin-bottom: 28px;
+}
+.arch-layers {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 2px;
+  border: 2px solid var(--green); border-radius: 8px; overflow: hidden;
+}
+.arch-layer {
+  padding: 18px 16px; position: relative;
+}
+.arch-layer-0 { background: var(--green-lite); }
+.arch-layer-1 { background: var(--blue-lite); }
+.arch-layer-2 { background: var(--purple-lite); }
+.arch-layer-3 { background: var(--amber-lite); }
+.arch-layer-num {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.arch-layer-0 .arch-layer-num { color: var(--green); }
+.arch-layer-1 .arch-layer-num { color: var(--blue); }
+.arch-layer-2 .arch-layer-num { color: var(--purple); }
+.arch-layer-3 .arch-layer-num { color: var(--amber); }
+.arch-layer-name {
+  font-family: var(--display); font-size: 15px;
+  font-weight: 600; margin-bottom: 6px; color: var(--ink);
+}
+.arch-layer-desc {
+  font-size: 12px; color: var(--ink-dim); line-height: 1.6;
+}
+.arch-arrow {
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px 4px; background: #fff;
+  font-size: 18px; color: var(--ink-faint);
+}
+
+/* ── PHASES CONTAINER ── */
+.phases { padding: 48px 64px; }
+
+/* ── PHASE CARD ── */
+.phase {
+  margin-bottom: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--cream2);
+  box-shadow: 0 2px 16px rgba(0,0,0,.06);
+  animation: riseIn .4s ease both;
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.phase:nth-child(1) { animation-delay: .05s; }
+.phase:nth-child(2) { animation-delay: .10s; }
+.phase:nth-child(3) { animation-delay: .15s; }
+.phase:nth-child(4) { animation-delay: .20s; }
+.phase:nth-child(5) { animation-delay: .25s; }
+.phase:nth-child(6) { animation-delay: .30s; }
+.phase:nth-child(7) { animation-delay: .35s; }
+.phase:nth-child(8) { animation-delay: .40s; }
+
+/* Phase colour variants */
+.phase-intel  { --ph: var(--green);  --ph-lite: var(--green-lite);  --ph-line: var(--green-mid); }
+.phase-data   { --ph: var(--blue);   --ph-lite: var(--blue-lite);   --ph-line: var(--blue); }
+.phase-app    { --ph: var(--purple); --ph-lite: var(--purple-lite); --ph-line: var(--purple); }
+.phase-ui     { --ph: var(--amber);  --ph-lite: var(--amber-lite);  --ph-line: var(--amber); }
+.phase-infra  { --ph: var(--gold);   --ph-lite: var(--gold-lite);   --ph-line: var(--gold); }
+
+.phase-head {
+  padding: 28px 36px;
+  background: var(--ph-lite);
+  border-bottom: 2px solid var(--ph-line);
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.phase-num-wrap { display: flex; align-items: flex-start; gap: 20px; }
+.phase-num {
+  font-family: var(--display); font-size: 56px;
+  line-height: 1; color: var(--ph-line);
+  opacity: .25; user-select: none;
+}
+.phase-meta {}
+.phase-tag {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ph); margin-bottom: 5px;
+}
+.phase-title {
+  font-family: var(--display); font-size: 26px;
+  color: var(--ink); line-height: 1.2;
+}
+.phase-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.badge {
+  font-family: var(--mono); font-size: 9px;
+  padding: 3px 10px; border-radius: 3px;
+  letter-spacing: .06em; border: 1px solid;
+}
+.badge-wk  { color: var(--green);  border-color: var(--green-mid);  background: var(--green-lite); }
+.badge-st  { color: var(--blue);   border-color: var(--blue);   background: var(--blue-lite); }
+.badge-tst { color: var(--amber);  border-color: var(--amber);  background: var(--amber-lite); }
+
+.phase-objective {
+  padding: 14px 36px;
+  background: #fff;
+  border-bottom: 1px solid var(--cream2);
+  font-size: 13px; color: var(--ink-dim); font-style: italic;
+}
+.phase-objective strong { color: var(--ink); font-style: normal; font-weight: 600; }
+
+.phase-body { background: var(--paper); }
+
+/* ── STEPS ── */
+.steps-wrap { padding: 32px 36px; border-bottom: 1px solid var(--cream2); }
+.block-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 22px;
+  display: flex; align-items: center; gap: 12px;
+}
+.block-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--cream2);
+}
+
+.step { display: grid; grid-template-columns: 36px 1fr; gap: 0 18px; margin-bottom: 28px; position: relative; }
+.step:not(:last-child)::after {
+  content: ''; position: absolute;
+  left: 17px; top: 38px; bottom: -28px;
+  width: 1px; background: var(--cream2);
+}
+.step-n {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--ph-lite); border: 2px solid var(--ph-line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--ph); flex-shrink: 0; position: relative; z-index: 1;
+}
+.step-body { padding-top: 6px; }
+.step-title {
+  font-size: 15px; font-weight: 600; color: var(--ink);
+  margin-bottom: 5px;
+}
+.step-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.7; margin-bottom: 10px; }
+.step-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag {
+  font-family: var(--mono); font-size: 10px;
+  padding: 2px 9px; border-radius: 3px;
+  border: 1px solid;
+}
+.tag-api    { color: var(--blue);   border-color: rgba(26,58,107,.3);   background: var(--blue-lite); }
+.tag-lib    { color: var(--green);  border-color: rgba(30,92,54,.3);    background: var(--green-lite); }
+.tag-data   { color: var(--purple); border-color: rgba(74,30,107,.3);   background: var(--purple-lite); }
+.tag-model  { color: var(--amber);  border-color: rgba(196,98,45,.3);   background: var(--amber-lite); }
+.tag-arch   { color: var(--gold);   border-color: rgba(139,105,20,.3);  background: var(--gold-lite); }
+
+/* ── CODE BLOCKS ── */
+.code {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #9ECE8A;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.85;
+  border-left: 3px solid var(--green-mid);
+}
+.cc  { color: rgba(255,255,255,.28); }   /* comment */
+.ck  { color: #F0C060; }                 /* keyword */
+.cs  { color: #90C8FF; }                 /* string */
+.cf  { color: #FFB090; }                 /* function/class */
+
+/* ── CALLOUTS ── */
+.callout {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 13px 16px; margin: 12px 0; border-radius: 5px;
+  font-size: 13px; line-height: 1.65;
+}
+.callout-warn { background: var(--gold-lite);   border: 1px solid rgba(139,105,20,.25); color: var(--gold); }
+.callout-tip  { background: var(--green-lite);  border: 1px solid rgba(30,92,54,.2);   color: var(--green); }
+.callout-info { background: var(--blue-lite);   border: 1px solid rgba(26,58,107,.2);  color: var(--blue); }
+.callout-key  { background: var(--purple-lite); border: 1px solid rgba(74,30,107,.2);  color: var(--purple); }
+.callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── TESTING SECTION ── */
+.tests-wrap {
+  padding: 28px 36px;
+  background: rgba(196,98,45,.03);
+  border-top: 1px solid rgba(196,98,45,.12);
+}
+.tests-wrap .block-label { color: var(--amber); }
+.tests-wrap .block-label::after { background: rgba(196,98,45,.2); }
+
+.test-card {
+  background: var(--paper);
+  border: 1px solid var(--cream2);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 6px 6px 0;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+.test-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.test-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.test-badge {
+  font-family: var(--mono); font-size: 9px;
+  padding: 2px 9px; border-radius: 3px;
+  letter-spacing: .06em; white-space: nowrap;
+}
+.tb-acc  { background: var(--green-lite);  color: var(--green);  border: 1px solid var(--green-line); }
+.tb-perf { background: var(--blue-lite);   color: var(--blue);   border: 1px solid rgba(26,58,107,.25); }
+.tb-safe { background: var(--red-lite);    color: var(--red);    border: 1px solid rgba(139,26,26,.25); }
+.tb-ux   { background: var(--gold-lite);   color: var(--gold);   border: 1px solid rgba(139,105,20,.25); }
+.tb-int  { background: var(--purple-lite); color: var(--purple); border: 1px solid rgba(74,30,107,.25); }
+
+.check {
+  font-size: 12.5px; color: var(--ink-dim); padding-left: 18px;
+  position: relative; margin-bottom: 4px; line-height: 1.6;
+}
+.check::before { content: '→'; position: absolute; left: 0; color: var(--amber); }
+
+.thresh {
+  display: inline-block; font-family: var(--mono); font-size: 11px;
+  padding: 1px 7px; border-radius: 3px; margin: 0 3px;
+}
+.th-pass { background: var(--green-lite);  color: var(--green);  border: 1px solid var(--green-line); }
+.th-warn { background: var(--gold-lite);   color: var(--gold);   border: 1px solid rgba(139,105,20,.3); }
+.th-fail { background: var(--red-lite);    color: var(--red);    border: 1px solid rgba(139,26,26,.3); }
+
+/* ── DELIVERABLES ── */
+.delivers {
+  margin: 0 36px 28px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid var(--cream2);
+  border-top: 2px solid var(--ph-line, var(--green));
+  border-radius: 0 0 8px 8px;
+}
+.delivers-title {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--green); margin-bottom: 12px;
+}
+.del-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 8px;
+}
+.del-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: var(--ink-dim);
+}
+.del-item::before { content: '✓'; color: var(--green); font-size: 11px; margin-top: 2px; flex-shrink: 0; }
+
+/* ── DIVIDER ── */
+.divider {
+  text-align: center; padding: 12px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--ink-faint); letter-spacing: 8px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px) {
+  .sidenav { display: none; }
+  main { margin-left: 0; }
+  .hero, .arch-section, .phases { padding: 32px 24px; }
+  .arch-layers { grid-template-columns: 1fr 1fr; }
+  .arch-arrow { display: none; }
+  .steps-wrap, .tests-wrap { padding: 24px 20px; }
+  .phase-head { padding: 20px 20px; }
+  .delivers { margin: 0 20px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidenav">
+  <div class="sidenav-logo">
+    <div class="logo-text">CEIP</div>
+    <div class="logo-sub">Implementation Plan</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Foundation</div>
+    <a href="#p0" class="nav-item active">
+      <div class="nav-dot" style="background:#8B6914"></div>
+      <span class="nav-item-text">P0 · Environment &amp; Contracts</span>
+    </a>
+    <a href="#p1" class="nav-item">
+      <div class="nav-dot" style="background:#2D7A4A"></div>
+      <span class="nav-item-text">P1 · Data Foundation</span>
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Intelligence</div>
+    <a href="#p2" class="nav-item">
+      <div class="nav-dot" style="background:#1A3A6B"></div>
+      <span class="nav-item-text">P2 · Living Data Layer</span>
+    </a>
+    <a href="#p3" class="nav-item">
+      <div class="nav-dot" style="background:#2D7A4A"></div>
+      <span class="nav-item-text">P3 · Embedding &amp; Search</span>
+    </a>
+    <a href="#p4" class="nav-item">
+      <div class="nav-dot" style="background:#1E5C36"></div>
+      <span class="nav-item-text">P4 · Harness RAG Engine</span>
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Platform</div>
+    <a href="#p5" class="nav-item">
+      <div class="nav-dot" style="background:#4A1E6B"></div>
+      <span class="nav-item-text">P5 · Application Backend</span>
+    </a>
+    <a href="#p6" class="nav-item">
+      <div class="nav-dot" style="background:#C4622D"></div>
+      <span class="nav-item-text">P6 · User Interface</span>
+    </a>
+    <a href="#p7" class="nav-item">
+      <div class="nav-dot" style="background:#1A3A6B"></div>
+      <span class="nav-item-text">P7 · Production &amp; Scale</span>
+    </a>
+  </div>
+  <div class="sidenav-footer">
+    8 phases · 32 test checkpoints<br>~22 weeks · M1 Pro 16GB
+  </div>
+</nav>
+
+<main>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-label">Conservation Effectiveness Intelligence Platform</div>
+  <h1 class="hero-title">The <em>Harness-First</em><br>Implementation Plan</h1>
+  <p class="hero-sub">A SaaS platform with a living evidence engine — built layer by layer, tested at every gate, designed to evolve as the science evolves.</p>
+  <div class="hero-pills">
+    <span class="pill pill-green">8 Build Phases</span>
+    <span class="pill pill-amber">32 Test Checkpoints</span>
+    <span class="pill pill-blue">Gemma 4 E4B · M1 Pro</span>
+    <span class="pill pill-purple">Harness-First Architecture</span>
+    <span class="pill pill-green">Living Data — Weekly Updates</span>
+    <span class="pill pill-amber">SaaS · Users Never See the Pipeline</span>
+  </div>
+</div>
+
+<!-- ── ARCHITECTURE ── -->
+<div class="arch-section">
+  <div class="arch-title">Platform Architecture — Four Layers, Built Bottom Up</div>
+  <div class="arch-layers">
+    <div class="arch-layer arch-layer-0">
+      <div class="arch-layer-num">Layer 1 · Phases 1–3</div>
+      <div class="arch-layer-name">Intelligence Layer</div>
+      <div class="arch-layer-desc">RAG engine, Gemma 4, ChromaDB, SQLite, evidence synthesis, Pydantic contracts</div>
+    </div>
+    <div class="arch-layer arch-layer-1">
+      <div class="arch-layer-num">Layer 2 · Phase 2</div>
+      <div class="arch-layer-name">Living Data Layer</div>
+      <div class="arch-layer-desc">Weekly autonomous agent ingesting new papers, classifying, embedding, triggering alerts</div>
+    </div>
+    <div class="arch-layer arch-layer-2">
+      <div class="arch-layer-num">Layer 3 · Phase 5</div>
+      <div class="arch-layer-name">Application Layer</div>
+      <div class="arch-layer-desc">FastAPI backend, user accounts, project registry, notification engine, TNFD module</div>
+    </div>
+    <div class="arch-layer arch-layer-3">
+      <div class="arch-layer-num">Layer 4 · Phase 6</div>
+      <div class="arch-layer-name">User Interface</div>
+      <div class="arch-layer-desc">The clean web interface practitioners see — they never touch the pipeline below</div>
+    </div>
+  </div>
+  <div style="margin-top:16px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);">
+    ↑ Users interact only here &nbsp;·&nbsp; Each layer calls the one below via internal API &nbsp;·&nbsp; Living Data Layer feeds all layers automatically
+  </div>
+</div>
+
+<!-- ── PHASES ── -->
+<div class="phases">
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 0
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-infra" id="p0">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">0</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Foundation · Weeks 1–2</div>
+        <div class="phase-title">Environment, Contracts<br>&amp; Evaluation Dataset</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">2 weeks</span>
+          <span class="badge badge-st">7 steps</span>
+          <span class="badge badge-tst">4 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective">
+    <strong>Harness-first rule:</strong> Build your evaluation dataset and define all Pydantic output contracts <em>before writing a single line of pipeline code</em>. Every architectural decision is measured against the eval set from day one.
+  </div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Create project workspace &amp; folder structure</div>
+          <div class="step-desc">Open Antigravity IDE, create a Python 3.11 workspace named <code>ceip</code>. This structure separates concerns cleanly — users, intelligence, living data, and API are independent modules.</div>
+          <div class="code"><span class="cc"># ceip/ — create this exactly before writing any code</span>
+ceip/
+├── contracts/        <span class="cc"># Pydantic schemas — define these FIRST</span>
+├── eval/             <span class="cc"># 20-question gold dataset — build this SECOND</span>
+├── data/
+│   ├── raw/          <span class="cc"># Downloaded datasets</span>
+│   ├── processed/    <span class="cc"># Cleaned, DB-ready</span>
+│   └── embeddings/   <span class="cc"># ChromaDB persistent storage</span>
+├── src/
+│   ├── intelligence/ <span class="cc"># RAG, synthesis, retrieval</span>
+│   ├── living/       <span class="cc"># Automated ingestion agent</span>
+│   ├── application/  <span class="cc"># User accounts, projects, alerts</span>
+│   └── api/          <span class="cc"># FastAPI routers</span>
+├── app/              <span class="cc"># Streamlit UI</span>
+├── tests/            <span class="cc"># Phase test scripts</span>
+├── .env              <span class="cc"># API keys — NEVER commit</span>
+└── requirements.txt</div>
+          <div class="step-tags"><span class="tag tag-arch">Antigravity IDE</span><span class="tag tag-lib">Git</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Define all Pydantic output contracts — before any pipeline code</div>
+          <div class="step-desc">Every AI output in the system must conform to a typed contract. Define these schemas now so every phase builds toward them. This is the core of harness engineering.</div>
+          <div class="code"><span class="cc"># contracts/evidence.py — THE contracts everything is built around</span>
+<span class="ck">from</span> pydantic <span class="ck">import</span> BaseModel, Field, field_validator
+<span class="ck">from</span> typing <span class="ck">import</span> Literal
+<span class="ck">from</span> enum <span class="ck">import</span> Enum
+
+<span class="ck">class</span> <span class="cf">EvidenceStrength</span>(str, Enum):
+    STRONG   = <span class="cs">"strong"</span>     <span class="cc"># 5+ RCT-quality studies</span>
+    MODERATE = <span class="cs">"moderate"</span>   <span class="cc"># 2-4 studies, reasonable design</span>
+    WEAK     = <span class="cs">"weak"</span>       <span class="cc"># 1 study or poor design</span>
+    NONE     = <span class="cs">"none"</span>       <span class="cc"># No studies found</span>
+
+<span class="ck">class</span> <span class="cf">Citation</span>(BaseModel):
+    index:    int
+    paper_id: str
+    title:    str
+    year:     int | None
+    source:   str   <span class="cc"># "Conservation Evidence" | "CORE" | "OpenAlex"</span>
+
+<span class="ck">class</span> <span class="cf">Intervention</span>(BaseModel):
+    name:             str
+    ce_category:      str | None   <span class="cc"># "Beneficial", "Unknown", etc.</span>
+    effectiveness_pct: float | None <span class="cc"># 0–100 from CE database</span>
+    n_studies:        int
+    outcome_direction: Literal[<span class="cs">"positive"</span>, <span class="cs">"negative"</span>, <span class="cs">"mixed"</span>, <span class="cs">"unclear"</span>]
+
+<span class="ck">class</span> <span class="cf">EvidenceSynthesis</span>(BaseModel):   <span class="cc"># ← every AI response must be THIS</span>
+    answer:          str
+    confidence:      EvidenceStrength
+    interventions:   list[Intervention]
+    evidence_gaps:   list[str]
+    citations:       list[Citation]
+    geo_limits:      str | None    <span class="cc"># geographic caveats</span>
+    taxa_limits:     str | None    <span class="cc"># taxonomic caveats</span>
+
+    <span class="ck">@field_validator</span>(<span class="cs">'answer'</span>)
+    <span class="ck">def</span> <span class="cf">answer_not_empty</span>(cls, v):
+        <span class="ck">if</span> len(v.split()) &lt; 20:
+            <span class="ck">raise</span> ValueError(<span class="cs">"Answer too short — likely generation failure"</span>)
+        <span class="ck">return</span> v</div>
+          <div class="callout callout-key"><span class="callout-icon">🔑</span>These contracts are your quality guarantee. If Gemma 4 returns output that doesn't match this schema, it is rejected and retried automatically — no bad data ever reaches a user.</div>
+          <div class="step-tags"><span class="tag tag-lib">pydantic</span><span class="tag tag-arch">contracts/</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Build the 20-question gold evaluation dataset</div>
+          <div class="step-desc">This is the most important single artefact in the project. Write 20 questions with known correct answers — drawn from the Conservation Evidence database — before touching any pipeline code. Every architecture change is benchmarked against this.</div>
+          <div class="code"><span class="cc"># eval/gold_dataset.json — build this by hand from CE database</span>
+[
+  {
+    <span class="cs">"id"</span>: <span class="cs">"E001"</span>,
+    <span class="cs">"question"</span>: <span class="cs">"Does removing introduced predators from islands benefit nesting seabirds?"</span>,
+    <span class="cs">"expected_intervention"</span>: <span class="cs">"Remove or control introduced predators"</span>,
+    <span class="cs">"expected_ce_category"</span>: <span class="cs">"Beneficial"</span>,
+    <span class="cs">"expected_direction"</span>: <span class="cs">"positive"</span>,
+    <span class="cs">"expected_confidence"</span>: <span class="cs">"strong"</span>,
+    <span class="cs">"species_group"</span>: <span class="cs">"birds"</span>,
+    <span class="cs">"geography"</span>: <span class="cs">"global islands"</span>,
+    <span class="cs">"ce_synopsis"</span>: <span class="cs">"Bird Conservation"</span>
+  },
+  <span class="cc">// ... 19 more — cover: mammals, fish, plants, invertebrates,</span>
+  <span class="cc">// marine, freshwater, forest, drylands, 8 intervention types</span>
+]</div>
+          <div class="callout callout-tip"><span class="callout-icon">💡</span>Spend 3–4 hours on this. Go to conservationevidence.com, pick 20 interventions with known CE ratings across different taxa and habitats. These 20 questions will be your compass for the next 20 weeks.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Install Python environment &amp; Phase 0 libraries</div>
+          <div class="code">python -m venv venv &amp;&amp; source venv/bin/activate
+
+pip install pydantic requests httpx python-dotenv \
+  sqlalchemy pandas tqdm loguru beautifulsoup4 \
+  lxml openpyxl jupyter rapidfuzz</div>
+          <div class="step-tags"><span class="tag tag-lib">pydantic</span><span class="tag tag-lib">sqlalchemy</span><span class="tag tag-lib">pandas</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Install Ollama + pull Gemma 4 E4B on M1 Pro</div>
+          <div class="step-desc">Ollama uses Metal GPU automatically on Apple Silicon — no configuration needed. Gemma 4 E4B uses ~5–8 GB unified memory, leaving plenty for macOS and Antigravity on 16 GB.</div>
+          <div class="code"><span class="cc"># Install Ollama (run in macOS terminal, not Antigravity)</span>
+curl -fsSL https://ollama.com/install.sh | sh
+
+<span class="cc"># Pull the two models you need</span>
+ollama pull nomic-embed-text   <span class="cc"># embeddings — 500MB</span>
+ollama pull gemma4:e4b         <span class="cc"># generation — ~6GB, check ollama.com/library/gemma4 for exact tag</span>
+
+<span class="cc"># Verify Metal GPU is active</span>
+ollama run gemma4:e4b "Describe conservation effectiveness in one sentence"
+
+<span class="cc"># Verify embeddings work</span>
+curl http://localhost:11434/api/embeddings \
+  -d '{"model":"nomic-embed-text","prompt":"conservation effectiveness"}'</div>
+          <div class="step-tags"><span class="tag tag-model">gemma4:e4b</span><span class="tag tag-model">nomic-embed-text</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">6</div>
+        <div class="step-body">
+          <div class="step-title">Configure .env and define SQLite schema</div>
+          <div class="code"><span class="cc"># .env — store all keys here, never hardcode</span>
+CORE_API_KEY=your_key
+IUCN_API_KEY=your_key
+PP_API_KEY=your_key
+GBIF_USER=your_username
+GBIF_PASSWORD=your_password
+OLLAMA_BASE=http://localhost:11434
+DB_PATH=data/ceip.db
+CHROMA_PATH=data/embeddings/</div>
+          <div class="step-tags"><span class="tag tag-lib">python-dotenv</span><span class="tag tag-lib">sqlalchemy</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">7</div>
+        <div class="step-body">
+          <div class="step-title">Write and run the master API connectivity test</div>
+          <div class="code"><span class="cc"># tests/t0_connectivity.py — run this before every work session</span>
+<span class="ck">import</span> os, requests
+<span class="ck">from</span> dotenv <span class="ck">import</span> load_dotenv
+load_dotenv()
+
+<span class="ck">def</span> <span class="cf">test_core</span>():
+    r = requests.get(<span class="cs">"https://api.core.ac.uk/v3/search/works"</span>,
+        headers={<span class="cs">"Authorization"</span>: <span class="cs">f"Bearer {os.getenv('CORE_API_KEY')}"</span>},
+        params={<span class="cs">"q"</span>: <span class="cs">"conservation effectiveness"</span>, <span class="cs">"limit"</span>: 1})
+    <span class="ck">assert</span> r.status_code == 200; <span class="ck">print</span>(<span class="cs">"✓ CORE"</span>, r.json()[<span class="cs">'totalHits'</span>], <span class="cs">"papers"</span>)
+
+<span class="ck">def</span> <span class="cf">test_iucn</span>():
+    r = requests.get(<span class="cs">"https://apiv3.iucnredlist.org/api/v3/species/panthera%20leo"</span>,
+        params={<span class="cs">"token"</span>: os.getenv(<span class="cs">"IUCN_API_KEY"</span>)})
+    <span class="ck">assert</span> r.status_code == 200; <span class="ck">print</span>(<span class="cs">"✓ IUCN connected"</span>)
+
+<span class="ck">def</span> <span class="cf">test_openalex</span>():
+    r = requests.get(<span class="cs">"https://api.openalex.org/works"</span>,
+        params={<span class="cs">"search"</span>: <span class="cs">"conservation"</span>, <span class="cs">"per-page"</span>: 1})
+    <span class="ck">assert</span> r.status_code == 200; <span class="ck">print</span>(<span class="cs">"✓ OpenAlex"</span>, r.json()[<span class="cs">'meta'</span>][<span class="cs">'count'</span>])
+
+<span class="ck">def</span> <span class="cf">test_gemma4</span>():
+    r = requests.post(<span class="cs">"http://localhost:11434/api/generate"</span>,
+        json={<span class="cs">"model"</span>: <span class="cs">"gemma4:e4b"</span>, <span class="cs">"prompt"</span>: <span class="cs">"Reply with: OK"</span>, <span class="cs">"stream"</span>: False})
+    <span class="ck">assert</span> r.status_code == 200; <span class="ck">print</span>(<span class="cs">"✓ Gemma 4 E4B running"</span>)
+
+<span class="ck">def</span> <span class="cf">test_nomic</span>():
+    r = requests.post(<span class="cs">"http://localhost:11434/api/embeddings"</span>,
+        json={<span class="cs">"model"</span>: <span class="cs">"nomic-embed-text"</span>, <span class="cs">"prompt"</span>: <span class="cs">"test"</span>})
+    emb = r.json()[<span class="cs">'embedding'</span>]
+    <span class="ck">assert</span> len(emb) == 768; <span class="ck">print</span>(<span class="cs">"✓ Embeddings: 768d"</span>)
+
+<span class="ck">if</span> __name__ == <span class="cs">"__main__"</span>:
+    test_core(); test_iucn(); test_openalex(); test_gemma4(); test_nomic()</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T0.1 — Full API Connectivity</div><div class="test-badge tb-int">Integration</div></div>
+        <div class="check">Run <code>python tests/t0_connectivity.py</code> — all 5 assertions must pass <span class="thresh th-pass">5/5 pass</span></div>
+        <div class="check">If IUCN fails: token approval may take 24–48h — move to Step 6 while waiting</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T0.2 — Gemma 4 Structured Output</div><div class="test-badge tb-acc">Accuracy</div></div>
+        <div class="check">Ask Gemma 4 to return a JSON object with 3 fields. Parse with Pydantic — must validate <span class="thresh th-pass">100%</span></div>
+        <div class="check">Ask for invalid field → Pydantic must raise ValidationError <span class="thresh th-pass">100%</span></div>
+        <div class="check">This confirms the harness contract system works before you build on top of it</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T0.3 — Eval Dataset Quality Review</div><div class="test-badge tb-acc">Domain Accuracy</div></div>
+        <div class="check">All 20 questions must have a verifiable answer in the Conservation Evidence database</div>
+        <div class="check">Questions must span: <span class="thresh th-pass">≥6 taxa groups</span>, <span class="thresh th-pass">≥4 habitat types</span>, <span class="thresh th-pass">≥5 intervention categories</span></div>
+        <div class="check">Have one conservation colleague review the 20 Q&amp;A pairs for domain correctness before proceeding</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T0.4 — Security &amp; Environment</div><div class="test-badge tb-int">Security</div></div>
+        <div class="check"><code>.env</code> in <code>.gitignore</code> and NOT visible in <code>git status</code> <span class="thresh th-pass">verified</span></div>
+        <div class="check">Ollama serving on localhost only (not exposed to network) <span class="thresh th-pass">confirmed</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 0 Gate — Do Not Proceed Until All Pass</div>
+    <div class="del-grid">
+      <div class="del-item">5/5 APIs return 200 OK</div>
+      <div class="del-item">Gemma 4 E4B running via Ollama</div>
+      <div class="del-item">Pydantic contracts defined</div>
+      <div class="del-item">20-question eval dataset complete</div>
+      <div class="del-item">Folder structure in place</div>
+      <div class="del-item">.env secured, never committed</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 1
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-intel" id="p1">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">1</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Intelligence Layer · Weeks 2–5</div>
+        <div class="phase-title">Data Foundation</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">3 weeks</span>
+          <span class="badge badge-st">6 steps</span>
+          <span class="badge badge-tst">5 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective"><strong>Objective:</strong> Download, clean and load all core datasets into SQLite. By end of phase, a SQL query answers "what interventions exist for lions in Kenya?" — no AI yet. AI is not called until the data is trusted.</div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Download &amp; load Conservation Evidence — your core dataset</div>
+          <div class="step-desc">Go to conservationevidence.com → About → Download. This CSV is the backbone of your platform — 3,891 interventions with expert-scored effectiveness ratings. You own this data, you loaded it yourself.</div>
+          <div class="code"><span class="cc"># src/intelligence/load_ce.py</span>
+<span class="ck">import</span> pandas <span class="ck">as</span> pd
+<span class="ck">from</span> src.db <span class="ck">import</span> Intervention, get_session
+
+df = pd.read_csv(<span class="cs">"data/raw/conservation_evidence.csv"</span>)
+<span class="cc"># Inspect first: print(df.columns.tolist(), df.head(2))</span>
+
+<span class="ck">with</span> get_session() <span class="ck">as</span> s:
+    <span class="ck">for</span> _, row <span class="ck">in</span> df.iterrows():
+        s.add(Intervention(
+            action         = row[<span class="cs">'action_description'</span>],
+            synopsis       = row[<span class="cs">'synopsis_title'</span>],
+            effectiveness  = row.get(<span class="cs">'effectiveness_score'</span>),
+            certainty      = row.get(<span class="cs">'certainty_score'</span>),
+            ce_category    = row.get(<span class="cs">'effectiveness_category'</span>),
+            n_studies      = row.get(<span class="cs">'number_of_studies'</span>)
+        ))
+    s.commit()
+<span class="ck">print</span>(<span class="cs">f"Loaded {len(df)} interventions"</span>)</div>
+          <div class="step-tags"><span class="tag tag-data">CE CSV</span><span class="tag tag-lib">pandas</span><span class="tag tag-lib">sqlalchemy</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Fetch IUCN species data (paginated API)</div>
+          <div class="step-desc">Pull all species assessments with their threat categories, habitats, and conservation actions. This is the species-level link between "what is threatened" and "what interventions exist."</div>
+          <div class="code"><span class="cc"># src/intelligence/fetch_iucn.py</span>
+<span class="ck">import</span> requests, os, time
+<span class="ck">from</span> tqdm <span class="ck">import</span> tqdm
+
+TOKEN = os.getenv(<span class="cs">"IUCN_API_KEY"</span>)
+BASE  = <span class="cs">"https://apiv3.iucnredlist.org/api/v3"</span>
+
+<span class="ck">def</span> <span class="cf">fetch_species_pages</span>():
+    page = 0
+    <span class="ck">while</span> True:
+        r = requests.get(<span class="cs">f"{BASE}/species/page/{page}"</span>,
+                         params={<span class="cs">"token"</span>: TOKEN}).json()
+        batch = r.get(<span class="cs">'result'</span>, [])
+        <span class="ck">if not</span> batch: <span class="ck">break</span>
+        <span class="ck">yield from</span> batch
+        page += 1; time.sleep(0.5)   <span class="cc"># be polite</span>
+
+<span class="ck">def</span> <span class="cf">fetch_species_actions</span>(taxon_id):
+    r = requests.get(<span class="cs">f"{BASE}/species/id/{taxon_id}/actions"</span>,
+                     params={<span class="cs">"token"</span>: TOKEN})
+    <span class="ck">return</span> r.json().get(<span class="cs">'result'</span>, [])</div>
+          <div class="step-tags"><span class="tag tag-api">IUCN API</span><span class="tag tag-lib">requests</span><span class="tag tag-lib">tqdm</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Fetch 20,000+ papers from CORE + OpenAlex</div>
+          <div class="step-desc">Query both APIs using targeted conservation search terms. Store title, abstract, DOI, year, PDF URL. These become the evidence chunks the RAG engine reasons over.</div>
+          <div class="code"><span class="cc"># Six targeted queries — run sequentially</span>
+QUERIES = [
+    <span class="cs">"conservation effectiveness intervention outcome"</span>,
+    <span class="cs">"species recovery conservation action evidence"</span>,
+    <span class="cs">"protected area management effectiveness"</span>,
+    <span class="cs">"habitat restoration biodiversity outcome"</span>,
+    <span class="cs">"invasive species removal control effectiveness"</span>,
+    <span class="cs">"community conservation human wildlife coexistence"</span>,
+]
+
+<span class="cc"># CORE API: ~3,000 per query → ~18,000 papers</span>
+<span class="cc"># OpenAlex: fill gaps, add citation metadata</span>
+<span class="cc"># Deduplicate by DOI before inserting to SQLite</span>
+<span class="cc"># Mark pdf_available=True if open-access PDF URL exists</span></div>
+          <div class="step-tags"><span class="tag tag-api">CORE API</span><span class="tag tag-api">OpenAlex API</span><span class="tag tag-lib">httpx</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Classify papers with Gemma 4 (first structured AI use)</div>
+          <div class="step-desc">For each abstract, Gemma 4 extracts structured metadata using a Pydantic contract — not free text. This is the first harness-engineered AI call in the system.</div>
+          <div class="code"><span class="cc"># src/intelligence/classify.py</span>
+<span class="ck">import</span> requests, json
+<span class="ck">from</span> contracts.evidence <span class="ck">import</span> PaperClassification
+
+PROMPT = <span class="cs">"""Extract structured metadata from this abstract.
+Return ONLY valid JSON matching this schema exactly:
+{
+  "intervention_type": one of ["habitat_restoration","species_reintro",
+    "protected_area","invasive_control","captive_breeding",
+    "community_mgmt","policy","monitoring","other"],
+  "species_group": one of ["mammals","birds","reptiles","fish",
+    "invertebrates","plants","fungi","general"],
+  "outcome": one of ["positive","negative","mixed","unclear"],
+  "geography": "country or region or global",
+  "has_quantitative_result": true or false
+}
+Abstract: {abstract}"""</span>
+
+<span class="ck">def</span> <span class="cf">classify_paper</span>(abstract: str, max_retries=3) -> PaperClassification | None:
+    <span class="ck">for</span> attempt <span class="ck">in</span> range(max_retries):
+        <span class="ck">try</span>:
+            r = requests.post(<span class="cs">"http://localhost:11434/api/generate"</span>, json={
+                <span class="cs">"model"</span>: <span class="cs">"gemma4:e4b"</span>,
+                <span class="cs">"prompt"</span>: PROMPT.format(abstract=abstract),
+                <span class="cs">"stream"</span>: False,
+                <span class="cs">"format"</span>: <span class="cs">"json"</span>   <span class="cc"># Gemma 4 native JSON mode</span>
+            })
+            <span class="ck">return</span> PaperClassification(**json.loads(r.json()[<span class="cs">'response'</span>]))
+        <span class="ck">except</span>: <span class="ck">continue</span>
+    <span class="ck">return</span> None</div>
+          <div class="callout callout-info"><span class="callout-icon">ℹ️</span>Gemma 4's native <code>"format": "json"</code> parameter enforces JSON output at the model level — a major advantage over older models that required prompt tricks to get structured output.</div>
+          <div class="step-tags"><span class="tag tag-model">gemma4:e4b</span><span class="tag tag-lib">pydantic</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Build species–intervention linkage table</div>
+          <div class="step-desc">Cross-reference IUCN conservation actions with Conservation Evidence interventions using fuzzy string matching. This creates the knowledge graph seed: Species → Threat → Intervention → Evidence.</div>
+          <div class="code"><span class="cc"># src/intelligence/link_species_interventions.py</span>
+<span class="ck">from</span> rapidfuzz <span class="ck">import</span> fuzz
+
+<span class="ck">def</span> <span class="cf">match_iucn_to_ce</span>(iucn_action: str, ce_interventions: list, top_k=3):
+    scores = [
+        (ce.id, fuzz.token_sort_ratio(iucn_action.lower(), ce.action.lower()))
+        <span class="ck">for</span> ce <span class="ck">in</span> ce_interventions
+    ]
+    <span class="ck">return</span> sorted(scores, key=<span class="ck">lambda</span> x: x[1], reverse=True)[:top_k]
+
+<span class="cc"># Output: species_intervention_links(species_id, ce_id, confidence_score)</span>
+<span class="cc"># confidence_score = rapidfuzz similarity / 100  →  0.0–1.0</span></div>
+          <div class="step-tags"><span class="tag tag-lib">rapidfuzz</span><span class="tag tag-lib">sqlalchemy</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">6</div>
+        <div class="step-body">
+          <div class="step-title">Build SQL baseline query — verify data quality before adding AI</div>
+          <div class="step-desc">This is your accuracy baseline. If SQL queries return wrong results, the AI layer on top will make it worse, not better. Do not proceed to Phase 2 until SQL queries are reliable.</div>
+          <div class="code"><span class="cc"># tests/t1_sql_baseline.py</span>
+<span class="ck">def</span> <span class="cf">test_query</span>(species_name: str, expected_interventions: list[str]):
+    <span class="cs">"""Pure SQL — no AI. Tests data integrity."""</span>
+    results = db.query(<span class="cs">"""
+        SELECT i.action, i.ce_category, i.effectiveness, i.n_studies
+        FROM interventions i
+        JOIN species_intervention_links l ON i.id = l.ce_id
+        JOIN species s ON s.taxon_id = l.species_id
+        WHERE s.name LIKE :name
+        ORDER BY i.effectiveness DESC NULLS LAST
+    """</span>, {<span class="cs">"name"</span>: <span class="cs">f"%{species_name}%"</span>})
+    found = [r[<span class="cs">'action'</span>] <span class="ck">for</span> r <span class="ck">in</span> results]
+    <span class="ck">for</span> exp <span class="ck">in</span> expected_interventions:
+        <span class="ck">assert</span> <span class="ck">any</span>(exp.lower() <span class="ck">in</span> f.lower() <span class="ck">for</span> f <span class="ck">in</span> found), <span class="cs">f"Missing: {exp}"</span>
+
+<span class="cc"># Run 10 known cases:</span>
+test_query(<span class="cs">"Panthera leo"</span>, [<span class="cs">"predator control"</span>, <span class="cs">"habitat protection"</span>])
+test_query(<span class="cs">"Puffinus puffinus"</span>, [<span class="cs">"predator removal"</span>, <span class="cs">"translocation"</span>])</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T1.1 — Dataset Completeness</div><div class="test-badge tb-int">Data Quality</div></div>
+        <div class="check">CE interventions in DB: <span class="thresh th-pass">&gt; 3,000 rows</span></div>
+        <div class="check">IUCN species loaded: <span class="thresh th-pass">&gt; 40,000 species</span></div>
+        <div class="check">Papers with non-null abstract: <span class="thresh th-pass">&gt; 15,000</span></div>
+        <div class="check">Duplicate DOIs in papers table: <span class="thresh th-pass">0</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T1.2 — Classification Accuracy (Manual Audit)</div><div class="test-badge tb-acc">AI Accuracy</div></div>
+        <div class="check">Randomly sample 50 classified papers and verify manually against abstract</div>
+        <div class="check">intervention_type correct: <span class="thresh th-pass">&gt; 80%</span> — if below, add 2 few-shot examples to prompt</div>
+        <div class="check">outcome direction correct: <span class="thresh th-pass">&gt; 75%</span></div>
+        <div class="check">Pydantic validation failures (malformed JSON): <span class="thresh th-pass">&lt; 5%</span> — retry logic handles these</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T1.3 — Species–Intervention Link Quality</div><div class="test-badge tb-acc">Domain Accuracy</div></div>
+        <div class="check">Test 10 well-known species — each must return <span class="thresh th-pass">&gt; 3 linked CE interventions</span></div>
+        <div class="check">All returned interventions must be biologically plausible (not random matches)</div>
+        <div class="check">Confidence scores &gt; 0.7: <span class="thresh th-warn">&gt; 50% of links</span> (lower is OK, it flags uncertain matches)</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T1.4 — SQL Baseline Accuracy</div><div class="test-badge tb-acc">Functional</div></div>
+        <div class="check">Run 10 known-answer queries — all must return expected interventions: <span class="thresh th-pass">10/10</span></div>
+        <div class="check">Query latency with indexes: <span class="thresh th-pass">&lt; 200ms</span></div>
+        <div class="check">Run <code>PRAGMA integrity_check</code>: must return <span class="thresh th-pass">ok</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T1.5 — Eval Dataset Baseline (SQL Only)</div><div class="test-badge tb-acc">Gold Standard</div></div>
+        <div class="check">Run all 20 eval questions against SQL only (no AI) — record how many return the expected CE intervention</div>
+        <div class="check">This establishes your SQL-only baseline score — e.g. 8/20 = 40%. AI must beat this in Phase 4.</div>
+        <div class="check">Document baseline: <span class="thresh th-warn">record exact score</span> — you will compare against this at every subsequent phase</div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 1 Gate</div>
+    <div class="del-grid">
+      <div class="del-item">3,000+ CE interventions in SQLite</div>
+      <div class="del-item">15,000+ papers with abstracts</div>
+      <div class="del-item">Species–intervention links built</div>
+      <div class="del-item">Classification accuracy &gt;80%</div>
+      <div class="del-item">SQL baseline score recorded</div>
+      <div class="del-item">10/10 SQL queries correct</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 2
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-data" id="p2">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">2</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Living Data Layer · Weeks 5–7</div>
+        <div class="phase-title">Living Data Infrastructure</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">2 weeks</span>
+          <span class="badge badge-st">4 steps</span>
+          <span class="badge badge-tst">4 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective">
+    <strong>Why this is Phase 2, not Phase 7:</strong> The living evidence engine is the core differentiator of CEIP. Building it early means the rest of the platform is designed around continuous data flow, not as an afterthought. The agent runs weekly from now on.
+  </div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Build the weekly paper ingestion agent</div>
+          <div class="step-desc">An autonomous Python agent that runs every Monday, fetches papers published in the last 7 days from OpenAlex, classifies each one, and queues relevant papers for embedding. This is the heartbeat of the living evidence system.</div>
+          <div class="code"><span class="cc"># src/living/ingestion_agent.py</span>
+<span class="ck">from</span> datetime <span class="ck">import</span> datetime, timedelta
+<span class="ck">import</span> httpx, asyncio
+<span class="ck">from</span> loguru <span class="ck">import</span> logger
+
+CONSERVATION_CONCEPTS = [
+    <span class="cs">"C149923435"</span>,  <span class="cc"># Conservation biology (OpenAlex concept ID)</span>
+    <span class="cs">"C2780878898"</span>, <span class="cc"># Biodiversity</span>
+    <span class="cs">"C2993671"</span>,    <span class="cc"># Wildlife conservation</span>
+    <span class="cs">"C100360200"</span>,  <span class="cc"># Habitat conservation</span>
+]
+
+<span class="ck">async def</span> <span class="cf">fetch_new_papers</span>(days_ago=7):
+    since = (datetime.now() - timedelta(days=days_ago)).strftime(<span class="cs">"%Y-%m-%d"</span>)
+    <span class="ck">async with</span> httpx.AsyncClient() <span class="ck">as</span> client:
+        <span class="ck">for</span> concept_id <span class="ck">in</span> CONSERVATION_CONCEPTS:
+            r = <span class="ck">await</span> client.get(<span class="cs">"https://api.openalex.org/works"</span>, params={
+                <span class="cs">"filter"</span>: <span class="cs">f"concepts.id:{concept_id},from_publication_date:{since}"</span>,
+                <span class="cs">"per-page"</span>: 200, <span class="cs">"select"</span>: <span class="cs">"id,title,abstract_inverted_index,doi,publication_year"</span>
+            })
+            <span class="ck">yield from</span> r.json().get(<span class="cs">'results'</span>, [])
+
+<span class="ck">async def</span> <span class="cf">run_weekly_ingestion</span>():
+    logger.info(<span class="cs">"Starting weekly ingestion run"</span>)
+    new, skipped = 0, 0
+    <span class="ck">async for</span> paper <span class="ck">in</span> fetch_new_papers():
+        doi = paper.get(<span class="cs">'doi'</span>)
+        <span class="ck">if</span> doi <span class="ck">and</span> <span class="ck">not</span> db.paper_exists(doi):
+            classification = classify_paper(reconstruct_abstract(paper))
+            <span class="ck">if</span> classification <span class="ck">and</span> classification.is_conservation_relevant:
+                db.queue_for_embedding(doi, paper, classification)
+                new += 1
+        <span class="ck">else</span>: skipped += 1
+    logger.info(<span class="cs">f"Ingestion: {new} new, {skipped} skipped/duplicate"</span>)</div>
+          <div class="step-tags"><span class="tag tag-api">OpenAlex API</span><span class="tag tag-lib">httpx</span><span class="tag tag-lib">loguru</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Build the relevance classifier pipeline</div>
+          <div class="step-desc">Not every paper fetched is relevant. A two-stage filter — fast keyword pre-filter then Gemma 4 classification — ensures only genuine conservation effectiveness papers enter the system.</div>
+          <div class="code"><span class="cc"># Stage 1: fast keyword pre-filter (no AI, instant)</span>
+MUST_HAVE = {<span class="cs">"conservation"</span>, <span class="cs">"biodiversity"</span>, <span class="cs">"species"</span>,
+             <span class="cs">"habitat"</span>, <span class="cs">"wildlife"</span>, <span class="cs">"ecosystem"</span>, <span class="cs">"restoration"</span>}
+
+<span class="ck">def</span> <span class="cf">keyword_prefilter</span>(abstract: str) -> bool:
+    words = set(abstract.lower().split())
+    <span class="ck">return</span> bool(MUST_HAVE & words)
+
+<span class="cc"># Stage 2: Gemma 4 relevance score (only for papers passing Stage 1)</span>
+<span class="cc"># Returns: {"relevant": true/false, "intervention_type": "...", "outcome": "..."}</span>
+<span class="cc"># Papers passing both stages are queued for embedding</span></div>
+          <div class="step-tags"><span class="tag tag-model">gemma4:e4b</span><span class="tag tag-lib">pydantic</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Schedule with cron and build the ingestion log</div>
+          <div class="code"><span class="cc"># On your Mac — add to crontab:</span>
+<span class="cc"># crontab -e  →  add this line:</span>
+0 6 * * 1 cd /path/to/ceip &amp;&amp; source venv/bin/activate &amp;&amp; python -m src.living.ingestion_agent
+
+<span class="cc"># Ingestion run log — stored in SQLite ingestion_runs table:</span>
+<span class="cc"># run_date | papers_fetched | papers_relevant | papers_embedded | duration_s</span>
+<span class="cc"># 2026-04-07 | 342 | 89 | 87 | 210</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Build the change detection &amp; alert trigger</div>
+          <div class="step-desc">When a new paper is ingested, check whether it's relevant to any registered user project. If so, flag it for the alert queue. The alert itself is sent in Phase 5 once user accounts exist.</div>
+          <div class="code"><span class="cc"># src/living/change_detector.py</span>
+<span class="ck">def</span> <span class="cf">check_paper_against_projects</span>(paper_id: str, paper_classification):
+    <span class="cs">"""After embedding, check which user projects this paper is relevant to."""</span>
+    projects = db.get_all_active_projects()
+    <span class="ck">for</span> project <span class="ck">in</span> projects:
+        <span class="cc"># Match on: species_group, intervention_type, geography</span>
+        relevance_score = compute_relevance(paper_classification, project)
+        <span class="ck">if</span> relevance_score &gt; 0.7:
+            db.queue_alert(user_id=project.user_id, paper_id=paper_id,
+                           project_id=project.id, score=relevance_score)
+
+<span class="cc"># Alert queue is consumed by the Application Layer (Phase 5)</span></div>
+          <div class="step-tags"><span class="tag tag-arch">living/ module</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T2.1 — First Ingestion Run</div><div class="test-badge tb-int">Integration</div></div>
+        <div class="check">Run agent manually: <code>python -m src.living.ingestion_agent</code></div>
+        <div class="check">Papers fetched from OpenAlex: <span class="thresh th-pass">&gt; 50 per run</span></div>
+        <div class="check">Relevance filter passing rate: <span class="thresh th-warn">15–40%</span> (too high = filter too loose; too low = too strict)</div>
+        <div class="check">Run completes without error within: <span class="thresh th-pass">&lt; 10 minutes</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T2.2 — Relevance Filter Quality</div><div class="test-badge tb-acc">Accuracy</div></div>
+        <div class="check">Manually review 30 papers flagged as relevant — all should be genuine conservation papers: <span class="thresh th-pass">&gt; 85%</span></div>
+        <div class="check">Manually review 20 papers flagged as NOT relevant — none should be conservation papers: <span class="thresh th-pass">&gt; 95%</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T2.3 — Duplicate Prevention</div><div class="test-badge tb-int">Data Integrity</div></div>
+        <div class="check">Run agent twice on same date range — second run must add <span class="thresh th-pass">0 new papers</span></div>
+        <div class="check">DOI-based deduplication must work for papers already in DB from Phase 1</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T2.4 — Cron Schedule Verified</div><div class="test-badge tb-int">System</div></div>
+        <div class="check">Cron job visible in <code>crontab -l</code></div>
+        <div class="check">Ingestion run log table has entry after scheduled execution</div>
+        <div class="check">Agent handles OpenAlex API timeout gracefully (retries, logs, continues)</div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 2 Gate — Living Engine Is Running</div>
+    <div class="del-grid">
+      <div class="del-item">Weekly agent running via cron</div>
+      <div class="del-item">Relevance filter &gt;85% precision</div>
+      <div class="del-item">Duplicate prevention working</div>
+      <div class="del-item">Change detection queue ready</div>
+      <div class="del-item">Ingestion log tracking every run</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 3
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-intel" id="p3">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">3</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Intelligence Layer · Weeks 7–9</div>
+        <div class="phase-title">Embedding &amp; Semantic Search</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">2 weeks</span>
+          <span class="badge badge-st">4 steps</span>
+          <span class="badge badge-tst">4 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective"><strong>Objective:</strong> Convert all documents to vectors in ChromaDB. The living agent from Phase 2 automatically feeds new papers here. By end, a semantic query finds relevant evidence even without exact keyword matches.</div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Set up ChromaDB with two persistent collections</div>
+          <div class="code"><span class="cc"># pip install chromadb langchain langchain-community langchain-ollama</span>
+
+<span class="ck">import</span> chromadb
+<span class="ck">from</span> chromadb.config <span class="ck">import</span> Settings
+
+client = chromadb.PersistentClient(
+    path=<span class="cs">"data/embeddings/"</span>,
+    settings=Settings(anonymized_telemetry=False)
+)
+
+papers_col = client.get_or_create_collection(
+    <span class="cs">"papers"</span>,
+    metadata={<span class="cs">"hnsw:space"</span>: <span class="cs">"cosine"</span>}  <span class="cc"># cosine for semantic similarity</span>
+)
+ce_col = client.get_or_create_collection(
+    <span class="cs">"ce_interventions"</span>,
+    metadata={<span class="cs">"hnsw:space"</span>: <span class="cs">"cosine"</span>}
+)</div>
+          <div class="step-tags"><span class="tag tag-lib">chromadb</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Chunk documents and run batch embedding overnight</div>
+          <div class="step-desc">Split papers into 400-token chunks with 50-token overlap. Embed CE interventions whole (they're short). Run the full batch overnight — 15,000 papers × ~3 chunks = ~45,000 embeddings via nomic-embed-text on Metal GPU.</div>
+          <div class="code"><span class="ck">from</span> langchain.text_splitter <span class="ck">import</span> RecursiveCharacterTextSplitter
+<span class="ck">from</span> tqdm <span class="ck">import</span> tqdm
+<span class="ck">import</span> requests
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50)
+
+<span class="ck">def</span> <span class="cf">embed</span>(text: str) -> list[float]:
+    r = requests.post(<span class="cs">"http://localhost:11434/api/embeddings"</span>,
+        json={<span class="cs">"model"</span>: <span class="cs">"nomic-embed-text"</span>, <span class="cs">"prompt"</span>: text})
+    <span class="ck">return</span> r.json()[<span class="cs">'embedding'</span>]
+
+<span class="ck">def</span> <span class="cf">embed_papers_batch</span>(batch_size=50):
+    papers = db.get_unembedded_papers()
+    <span class="ck">for</span> paper <span class="ck">in</span> tqdm(papers, desc=<span class="cs">"Embedding"</span>):
+        chunks = splitter.split_text(paper.abstract)
+        <span class="ck">for</span> i, chunk <span class="ck">in</span> enumerate(chunks):
+            papers_col.add(
+                documents=[chunk], embeddings=[embed(chunk)],
+                ids=[<span class="cs">f"{paper.id}_c{i}"</span>],
+                metadatas=[{<span class="cs">"paper_id"</span>: paper.id, <span class="cs">"year"</span>: paper.year,
+                            <span class="cs">"intervention_type"</span>: paper.intervention_type}]
+            )
+        db.mark_embedded(paper.id)
+
+<span class="cc"># CE interventions: combine action + category + synopsis for richer embedding</span>
+<span class="ck">def</span> <span class="cf">embed_ce_interventions</span>():
+    <span class="ck">for</span> ce <span class="ck">in</span> db.get_all_interventions():
+        text = <span class="cs">f"{ce.action} [{ce.ce_category}] {ce.synopsis}"</span>
+        ce_col.add(documents=[text], embeddings=[embed(text)],
+                   ids=[<span class="cs">f"ce_{ce.id}"</span>],
+                   metadatas=[{<span class="cs">"ce_id"</span>: ce.id, <span class="cs">"effectiveness"</span>: ce.effectiveness or 0}])</div>
+          <div class="callout callout-warn"><span class="callout-icon">⏱</span>This job takes 3–6 hours on M1 Pro CPU. Start it before bed. Add a checkpoint every 1,000 papers so it can resume if interrupted: check <code>db.mark_embedded()</code> is called after each paper.</div>
+          <div class="step-tags"><span class="tag tag-model">nomic-embed-text</span><span class="tag tag-lib">chromadb</span><span class="tag tag-lib">langchain</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Build the hybrid retriever (vector + keyword)</div>
+          <div class="step-desc">Pure vector search misses exact species names and place names. Combine with BM25 keyword search. The ensemble gives you the best of both: semantic understanding + exact term matching.</div>
+          <div class="code"><span class="ck">from</span> langchain.retrievers <span class="ck">import</span> EnsembleRetriever
+<span class="ck">from</span> langchain_community.retrievers <span class="ck">import</span> BM25Retriever
+<span class="ck">from</span> langchain_community.vectorstores <span class="ck">import</span> Chroma
+
+vector_retriever = chroma_store.as_retriever(search_kwargs={<span class="cs">"k"</span>: 8})
+bm25_retriever   = BM25Retriever.from_texts(all_chunks); bm25_retriever.k = 8
+
+hybrid_retriever = EnsembleRetriever(
+    retrievers=[vector_retriever, bm25_retriever],
+    weights=[0.6, 0.4]  <span class="cc"># favour semantic slightly — tunable</span>
+)</div>
+          <div class="step-tags"><span class="tag tag-lib">langchain</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Integrate embedding into the living data pipeline</div>
+          <div class="step-desc">Papers queued by the ingestion agent (Phase 2) are automatically picked up and embedded. The living data layer now feeds the intelligence layer automatically.</div>
+          <div class="code"><span class="cc"># Add to src/living/ingestion_agent.py — called after classification</span>
+<span class="ck">def</span> <span class="cf">embed_queued_papers</span>():
+    <span class="cs">"""Run after ingestion: embed all queued papers into ChromaDB."""</span>
+    queued = db.get_embedding_queue()
+    <span class="ck">for</span> paper <span class="ck">in</span> tqdm(queued, desc=<span class="cs">"Embedding new papers"</span>):
+        embed_and_store(paper)
+        check_paper_against_projects(paper.id, paper.classification)
+        db.mark_embedded(paper.id)
+    logger.info(<span class="cs">f"Embedded {len(queued)} new papers"</span>)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T3.1 — Embedding Completeness</div><div class="test-badge tb-int">Data Integrity</div></div>
+        <div class="check">ChromaDB papers collection count: <span class="thresh th-pass">&gt; 40,000 chunks</span></div>
+        <div class="check">CE interventions collection: <span class="thresh th-pass">&gt; 3,000</span></div>
+        <div class="check">Papers with <code>embedded=0</code> in SQLite: <span class="thresh th-pass">&lt; 5%</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T3.2 — Semantic Retrieval Quality (20 Standard Queries)</div><div class="test-badge tb-acc">Accuracy — Critical</div></div>
+        <div class="check">Run 20 conservation queries covering different taxa/habitats (listed in plan appendix)</div>
+        <div class="check">Top-5 returned chunks topically relevant (manual review): <span class="thresh th-pass">&gt; 80%</span></div>
+        <div class="check">Completely off-topic results in top-3: <span class="thresh th-fail">0 tolerated</span></div>
+        <div class="check">If below threshold: try chunk size 300 vs 500 tokens; adjust hybrid weights</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T3.3 — CE Retrieval Sanity Checks</div><div class="test-badge tb-acc">Domain Accuracy</div></div>
+        <div class="check">"Remove invasive predators from islands" → top result must include CE island eradication intervention</div>
+        <div class="check">"Marine reserve no-take zone fish biomass" → returns marine protected area CE intervention</div>
+        <div class="check">"Payments for ecosystem services forest conservation" → returns PES intervention</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T3.4 — Retrieval Performance</div><div class="test-badge tb-perf">Performance</div></div>
+        <div class="check">Single query against 40K+ chunks: <span class="thresh th-pass">&lt; 2 seconds</span></div>
+        <div class="check">ChromaDB storage size: <span class="thresh th-warn">&lt; 5GB</span></div>
+        <div class="check">New paper from living agent embedded and queryable within: <span class="thresh th-pass">&lt; 24 hours</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 3 Gate</div>
+    <div class="del-grid">
+      <div class="del-item">40,000+ chunks in ChromaDB</div>
+      <div class="del-item">CE interventions embedded</div>
+      <div class="del-item">Hybrid retriever built &amp; tested</div>
+      <div class="del-item">&gt;80% relevant on test set</div>
+      <div class="del-item">Living agent feeds ChromaDB</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 4
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-intel" id="p4">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">4</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Intelligence Layer · Weeks 9–12</div>
+        <div class="phase-title">Harness-First RAG Engine</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">3 weeks</span>
+          <span class="badge badge-st">6 steps</span>
+          <span class="badge badge-tst">6 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective"><strong>The harness principle applied fully:</strong> Query routing, Pydantic-enforced outputs, retry logic, and validation happen BEFORE any response is formed. The LLM is one component — not the system. Switch Gemma 4 for any future model by changing one config line.</div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Build the query router — not everything goes to the LLM</div>
+          <div class="step-desc">Three query types; only complex ones invoke the full RAG pipeline. Simple queries return fast, accurate answers from structured data without ever touching the LLM.</div>
+          <div class="code"><span class="cc"># src/intelligence/router.py</span>
+<span class="ck">from</span> enum <span class="ck">import</span> Enum
+
+<span class="ck">class</span> <span class="cf">QueryType</span>(Enum):
+    FACTUAL   = <span class="cs">"factual"</span>    <span class="cc"># "What is the IUCN status of lions?" → SQL</span>
+    LOOKUP    = <span class="cs">"lookup"</span>     <span class="cc"># "What CE rating does predator removal get?" → DB direct</span>
+    SYNTHESIS = <span class="cs">"synthesis"</span>  <span class="cc"># "What works for seabirds in NZ?" → full RAG</span>
+
+<span class="ck">def</span> <span class="cf">classify_query</span>(question: str) -> QueryType:
+    q = question.lower()
+    <span class="cc"># Pattern matching — simple and reliable</span>
+    <span class="ck">if</span> <span class="ck">any</span>(w <span class="ck">in</span> q <span class="ck">for</span> w <span class="ck">in</span> [<span class="cs">"iucn status"</span>, <span class="cs">"red list"</span>, <span class="cs">"extinct"</span>, <span class="cs">"endemic"</span>]):
+        <span class="ck">return</span> QueryType.FACTUAL
+    <span class="ck">if</span> <span class="ck">any</span>(w <span class="ck">in</span> q <span class="ck">for</span> w <span class="ck">in</span> [<span class="cs">"ce rating"</span>, <span class="cs">"effectiveness score"</span>, <span class="cs">"what score"</span>]):
+        <span class="ck">return</span> QueryType.LOOKUP
+    <span class="ck">return</span> QueryType.SYNTHESIS
+
+<span class="ck">def</span> <span class="cf">route_query</span>(question: str, context) -> EvidenceSynthesis:
+    qtype = classify_query(question)
+    <span class="ck">if</span> qtype == QueryType.FACTUAL:  <span class="ck">return</span> handle_factual(question, context)
+    <span class="ck">if</span> qtype == QueryType.LOOKUP:   <span class="ck">return</span> handle_lookup(question, context)
+    <span class="ck">return</span> handle_synthesis(question, context)  <span class="cc"># full RAG only if needed</span></div>
+          <div class="step-tags"><span class="tag tag-arch">routing</span><span class="tag tag-lib">pydantic</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Build the evidence synthesis chain with Pydantic-enforced output</div>
+          <div class="code"><span class="cc"># src/intelligence/synthesiser.py</span>
+<span class="ck">import</span> json, requests
+<span class="ck">from</span> contracts.evidence <span class="ck">import</span> EvidenceSynthesis
+
+SYNTHESIS_PROMPT = <span class="cs">"""You are an expert conservation scientist.
+Synthesise the evidence below and answer the practitioner's question.
+
+QUESTION: {question}
+SPECIES / HABITAT: {context}
+LOCATION: {location}
+
+RETRIEVED EVIDENCE (cite by [N]):
+{evidence_chunks}
+
+CE DATABASE RATINGS:
+{ce_ratings}
+
+REQUIRED OUTPUT — return ONLY this JSON structure:
+{{
+  "answer": "2-4 sentence direct answer",
+  "confidence": "strong|moderate|weak|none",
+  "interventions": [
+    {{"name": "...", "ce_category": "...", "effectiveness_pct": 75,
+      "n_studies": 12, "outcome_direction": "positive"}}
+  ],
+  "evidence_gaps": ["list", "of", "gaps"],
+  "citations": [{{"index":1,"paper_id":"...","title":"...","year":2023,"source":"CORE"}}],
+  "geo_limits": "note if evidence is geographically limited or null",
+  "taxa_limits": "note if evidence is taxa-specific or null"
+}}
+NEVER invent facts. Cite ONLY from provided evidence. If evidence is absent, set confidence to 'none'."""</span>
+
+<span class="ck">def</span> <span class="cf">synthesise</span>(question, context, location, chunks, ce_rows, max_retries=3):
+    evidence_text = <span class="cs">"\n\n"</span>.join(
+        [<span class="cs">f"[{i+1}] {c.page_content} ({c.metadata.get('year','?')})"</span>
+         <span class="ck">for</span> i, c <span class="ck">in</span> enumerate(chunks[:8])])
+
+    prompt = SYNTHESIS_PROMPT.format(
+        question=question, context=context, location=location,
+        evidence_chunks=evidence_text, ce_ratings=format_ce(ce_rows))
+
+    <span class="ck">for</span> attempt <span class="ck">in</span> range(max_retries):
+        <span class="ck">try</span>:
+            r = requests.post(<span class="cs">"http://localhost:11434/api/generate"</span>, json={
+                <span class="cs">"model"</span>: <span class="cs">"gemma4:e4b"</span>, <span class="cs">"prompt"</span>: prompt,
+                <span class="cs">"stream"</span>: False, <span class="cs">"format"</span>: <span class="cs">"json"</span>,
+                <span class="cs">"options"</span>: {<span class="cs">"temperature"</span>: 0.05}  <span class="cc"># near-deterministic</span>
+            }, timeout=60)
+            raw = json.loads(r.json()[<span class="cs">'response'</span>])
+            <span class="ck">return</span> EvidenceSynthesis(**raw)   <span class="cc"># Pydantic validates — raises if malformed</span>
+        <span class="ck">except</span> Exception <span class="ck">as</span> e:
+            <span class="ck">if</span> attempt == max_retries - 1:
+                <span class="ck">return</span> safe_fallback_response(question, chunks)  <span class="cc"># never fail silently</span></div>
+          <div class="step-tags"><span class="tag tag-model">gemma4:e4b</span><span class="tag tag-lib">pydantic</span><span class="tag tag-arch">contracts/</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Build the citation integrity validator</div>
+          <div class="code"><span class="cc"># src/intelligence/validator.py</span>
+<span class="ck">import</span> re
+<span class="ck">from</span> contracts.evidence <span class="ck">import</span> EvidenceSynthesis
+
+<span class="ck">def</span> <span class="cf">validate_synthesis</span>(result: EvidenceSynthesis, source_chunks: list) -> dict:
+    cited  = {c.index <span class="ck">for</span> c <span class="ck">in</span> result.citations}
+    avail  = set(range(1, len(source_chunks) + 1))
+    orphan = cited - avail
+
+    in_answer = set(int(n) <span class="ck">for</span> n <span class="ck">in</span> re.findall(r<span class="cs">'\[(\d+)\]'</span>, result.answer))
+    uncited  = in_answer - cited
+
+    <span class="ck">return</span> {
+        <span class="cs">"valid"</span>:         len(orphan) == 0 <span class="ck">and</span> len(uncited) == 0,
+        <span class="cs">"orphan_cites"</span>:  list(orphan),   <span class="cc"># cited but not in sources</span>
+        <span class="cs">"uncited_refs"</span>:  list(uncited),  <span class="cc"># referenced in text but no citation object</span>
+        <span class="cs">"confidence_ok"</span>: result.confidence != <span class="cs">"strong"</span> <span class="ck">or</span> len(result.interventions) &gt;= 2
+    }</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Build the safe fallback response</div>
+          <div class="step-desc">If Gemma 4 fails to produce a valid Pydantic-conforming response after 3 retries, the system returns a structured fallback — never a crash, never silence, never a raw error.</div>
+          <div class="code"><span class="ck">def</span> <span class="cf">safe_fallback_response</span>(question: str, chunks: list) -> EvidenceSynthesis:
+    <span class="cs">"""Returns a minimal valid response when generation fails."""</span>
+    <span class="ck">return</span> EvidenceSynthesis(
+        answer=<span class="cs">"Evidence synthesis is temporarily unavailable. The retrieved sources are listed below."</span>,
+        confidence=<span class="cs">"none"</span>,
+        interventions=[], evidence_gaps=[<span class="cs">"Generation failed — please retry"</span>],
+        citations=[Citation(index=i+1, paper_id=c.metadata[<span class="cs">'paper_id'</span>],
+                            title=c.metadata.get(<span class="cs">'title'</span>,<span class="cs">'Unknown'</span>),
+                            year=c.metadata.get(<span class="cs">'year'</span>), source=<span class="cs">'CORE'</span>)
+                   <span class="ck">for</span> i, c <span class="ck">in</span> enumerate(chunks[:5])],
+        geo_limits=None, taxa_limits=None
+    )</div>
+          <div class="callout callout-tip"><span class="callout-icon">💡</span>The fallback still returns the retrieved source documents. Users get the raw evidence even if the AI synthesis failed — they're never left with nothing.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Build the full observability &amp; logging layer</div>
+          <div class="code"><span class="cc"># Every query logs ALL of this — your improvement signal</span>
+<span class="ck">from</span> loguru <span class="ck">import</span> logger
+
+<span class="ck">def</span> <span class="cf">log_query_run</span>(question, query_type, retrieved_chunks,
+                   synthesis, validation, user_feedback=None):
+    db.insert(<span class="cs">"query_log"</span>, {
+        <span class="cs">"question"</span>:         question,
+        <span class="cs">"query_type"</span>:       query_type.value,
+        <span class="cs">"n_chunks"</span>:         len(retrieved_chunks),
+        <span class="cs">"confidence"</span>:       synthesis.confidence,
+        <span class="cs">"validation_passed"</span>: validation[<span class="cs">"valid"</span>],
+        <span class="cs">"orphan_cites"</span>:     len(validation[<span class="cs">"orphan_cites"</span>]),
+        <span class="cs">"user_feedback"</span>:    user_feedback,   <span class="cc"># thumbs up/down from UI</span>
+        <span class="cs">"latency_ms"</span>:       ...,
+        <span class="cs">"model"</span>:            <span class="cs">"gemma4:e4b"</span>,
+        <span class="cs">"timestamp"</span>:        datetime.utcnow()
+    })</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">6</div>
+        <div class="step-body">
+          <div class="step-title">Run the full 20-question eval dataset — beat SQL baseline</div>
+          <div class="code"><span class="cc"># tests/t4_eval.py — run this after EVERY architecture change</span>
+<span class="ck">import</span> json
+<span class="ck">from</span> src.intelligence.router <span class="ck">import</span> route_query
+
+gold = json.load(open(<span class="cs">"eval/gold_dataset.json"</span>))
+scores = {<span class="cs">"ce_present"</span>:0, <span class="cs">"direction_correct"</span>:0, <span class="cs">"confidence_nonzero"</span>:0, <span class="cs">"cited"</span>:0}
+
+<span class="ck">for</span> item <span class="ck">in</span> gold:
+    result = route_query(item[<span class="cs">'question'</span>], context={})
+    scores[<span class="cs">"ce_present"</span>]    += item[<span class="cs">'expected_intervention'</span>].lower() <span class="ck">in</span> \
+                                   str(result.interventions).lower()
+    scores[<span class="cs">"direction_correct"</span>] += result.interventions <span class="ck">and</span> \
+                                   result.interventions[0].outcome_direction == item[<span class="cs">'expected_direction'</span>]
+    scores[<span class="cs">"confidence_nonzero"</span>] += result.confidence != <span class="cs">"none"</span>
+    scores[<span class="cs">"cited"</span>] += len(result.citations) &gt; 0
+
+<span class="ck">for</span> k, v <span class="ck">in</span> scores.items():
+    <span class="ck">print</span>(<span class="cs">f"{k}: {v}/20 ({v*5}%)"</span>)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T4.1 — Eval Dataset: Beat the SQL Baseline</div><div class="test-badge tb-acc">Core Accuracy Metric</div></div>
+        <div class="check">CE-grounded intervention appears in response: <span class="thresh th-pass">&gt; 70%</span> (must beat Phase 1 SQL baseline)</div>
+        <div class="check">Outcome direction correct: <span class="thresh th-pass">&gt; 75%</span></div>
+        <div class="check">Every response has at least 1 citation: <span class="thresh th-pass">20/20</span></div>
+        <div class="check">If below SQL baseline: the RAG pipeline is worse than plain lookup — debug retrieval before proceeding</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T4.2 — Hallucination Rate</div><div class="test-badge tb-safe">Safety</div></div>
+        <div class="check">Manually verify 30 factual claims from 5 random answers against source chunks</div>
+        <div class="check">Unsupported claims: <span class="thresh th-fail">&lt; 10%</span> — if above, add "ONLY use provided evidence" more prominently to prompt</div>
+        <div class="check">Completely fabricated citations: <span class="thresh th-fail">0 tolerated — zero</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T4.3 — Evidence Gap Acknowledgement</div><div class="test-badge tb-acc">Uncertainty</div></div>
+        <div class="check">Ask 5 questions about taxa with no CE coverage (invertebrates, fungi, obscure plants)</div>
+        <div class="check">All 5 must set confidence = "none" or "weak": <span class="thresh th-pass">5/5</span></div>
+        <div class="check">None should fabricate effectiveness data: <span class="thresh th-fail">0 tolerated</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T4.4 — Citation Validator</div><div class="test-badge tb-int">Integrity</div></div>
+        <div class="check">Run validator on 50 generated responses</div>
+        <div class="check">Orphan citation rate: <span class="thresh th-pass">&lt; 5%</span></div>
+        <div class="check">Responses failing Pydantic contract (handled by retry): <span class="thresh th-pass">&lt; 5%</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T4.5 — Query Routing Accuracy</div><div class="test-badge tb-acc">Routing</div></div>
+        <div class="check">20 factual queries routed correctly (SQL, not RAG): <span class="thresh th-pass">&gt; 18/20</span></div>
+        <div class="check">20 synthesis queries correctly routed to full RAG: <span class="thresh th-pass">&gt; 19/20</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T4.6 — Practitioner Blind Review</div><div class="test-badge tb-ux">Human Evaluation</div></div>
+        <div class="check">Share 10 Q&amp;A pairs with 2–3 conservation colleagues — rate accuracy (1–5) and usefulness (1–5)</div>
+        <div class="check">Average accuracy: <span class="thresh th-pass">&gt; 3.5/5</span> &nbsp;·&nbsp; "Would you act on this?": <span class="thresh th-pass">&gt; 50%</span> yes</div>
+        <div class="check">This is your most important test — real practitioner signal beats any automated metric</div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 4 Gate — Intelligence Engine Ready</div>
+    <div class="del-grid">
+      <div class="del-item">Full RAG pipeline with routing</div>
+      <div class="del-item">Pydantic contracts enforced</div>
+      <div class="del-item">Eval score &gt;70% CE accuracy</div>
+      <div class="del-item">Hallucination rate &lt;10%</div>
+      <div class="del-item">Fallback response working</div>
+      <div class="del-item">Practitioner review &gt;3.5/5</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 5
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-app" id="p5">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">5</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Application Layer · Weeks 12–15</div>
+        <div class="phase-title">Application Backend</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">3 weeks</span>
+          <span class="badge badge-st">5 steps</span>
+          <span class="badge badge-tst">4 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective"><strong>This is where CEIP becomes a platform, not just a tool.</strong> User accounts, project registration, alert delivery, TNFD reporting module, and the FastAPI backend that the UI calls. Users still see nothing — this is all plumbing.</div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Build FastAPI backend with user auth</div>
+          <div class="code"><span class="cc"># src/api/main.py</span>
+<span class="ck">from</span> fastapi <span class="ck">import</span> FastAPI, Depends, HTTPException
+<span class="ck">from</span> fastapi.security <span class="ck">import</span> HTTPBearer
+<span class="ck">from</span> contracts.evidence <span class="ck">import</span> EvidenceSynthesis
+
+app = FastAPI(title=<span class="cs">"CEIP API v1"</span>, docs_url=<span class="cs">"/docs"</span>)
+security = HTTPBearer()
+
+<span class="ck">class</span> <span class="cf">EvidenceRequest</span>(BaseModel):
+    question: str
+    species:  str = <span class="cs">""</span>
+    location: str = <span class="cs">""</span>
+    habitat:  str = <span class="cs">""</span>
+
+<span class="cc"># Public endpoint — free tier</span>
+@app.post(<span class="cs">"/api/v1/evidence"</span>, response_model=EvidenceSynthesis)
+<span class="ck">async def</span> <span class="cf">get_evidence</span>(req: EvidenceRequest):
+    result = route_query(req.question, context=req.dict())
+    log_query_run(req.question, result)
+    <span class="ck">return</span> result
+
+<span class="cc"># Auth-protected endpoint — Pro/Enterprise tier</span>
+@app.post(<span class="cs">"/api/v1/evidence/full"</span>, response_model=EvidenceSynthesis)
+<span class="ck">async def</span> <span class="cf">get_evidence_full</span>(req: EvidenceRequest, token=Depends(security)):
+    user = verify_token(token)
+    result = route_query(req.question, context=req.dict(), user=user)
+    <span class="ck">return</span> result
+
+@app.get(<span class="cs">"/api/v1/species/{name}"</span>)
+<span class="ck">async def</span> <span class="cf">species_profile</span>(name: str):
+    <span class="ck">return</span> db.get_species_with_interventions(name)</div>
+          <div class="step-tags"><span class="tag tag-lib">fastapi</span><span class="tag tag-lib">pydantic</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Build project registry — users register their conservation activities</div>
+          <div class="step-desc">A user registers: "I manage a community conservation programme for lions in northern Kenya." CEIP stores this profile and the living agent matches incoming papers against it automatically.</div>
+          <div class="code"><span class="cc"># Project schema — what users register</span>
+<span class="ck">class</span> <span class="cf">ConservationProject</span>(BaseModel):
+    name:              str
+    description:       str
+    species_groups:    list[str]   <span class="cc"># ["mammals", "birds"]</span>
+    intervention_types: list[str]  <span class="cc"># ["community_mgmt", "habitat_restoration"]</span>
+    geography:         str         <span class="cc"># "northern Kenya", "global", "Pacific islands"</span>
+    alert_frequency:   str         <span class="cc"># "weekly" | "monthly" | "immediate"</span>
+
+<span class="cc"># When living agent finds a new relevant paper:</span>
+<span class="cc"># → check_paper_against_projects() runs</span>
+<span class="cc"># → matching projects get queued alerts</span></div>
+          <div class="step-tags"><span class="tag tag-lib">fastapi</span><span class="tag tag-lib">sqlalchemy</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Build the notification engine</div>
+          <div class="step-desc">Deliver alerts from the queue (populated by the living agent) to users via email digest. At MVP scale, use a simple SMTP library. At scale, replace with SendGrid/Resend.</div>
+          <div class="code"><span class="cc"># src/application/notifier.py</span>
+<span class="ck">import</span> smtplib
+<span class="ck">from</span> email.mime.text <span class="ck">import</span> MIMEText
+
+<span class="ck">def</span> <span class="cf">send_evidence_alert</span>(user_email: str, paper, project_name: str):
+    <span class="cs">"""Sends: new paper relevant to your [project] was published."""</span>
+    body = <span class="cs">f"""
+New evidence for your project: {project_name}
+
+Title: {paper.title}
+Year:  {paper.year}
+Relevance: {paper.relevance_score:.0%}
+
+View the evidence synthesis: https://ceip.io/evidence/{paper.id}
+"""</span>
+    <span class="cc"># Send via SMTP (use App Password for Gmail at MVP stage)</span>
+    <span class="cc"># Replace with SendGrid/Resend in production</span></div>
+          <div class="step-tags"><span class="tag tag-arch">application/ module</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Build the TNFD/CSRD report generator</div>
+          <div class="step-desc">Corporate users input: company sector, geographic footprint, biodiversity dependencies. CEIP generates a structured report with evidence-based action recommendations aligned to TNFD LEAP and GRI 101 Biodiversity.</div>
+          <div class="code"><span class="cc"># src/application/tnfd_report.py</span>
+<span class="ck">class</span> <span class="cf">TNFDReportRequest</span>(BaseModel):
+    sector:    str        <span class="cc"># "agriculture", "mining", "finance"</span>
+    locations: list[str]  <span class="cc"># ["Kenya", "Indonesia"]</span>
+    species_of_concern: list[str] = []
+
+<span class="ck">def</span> <span class="cf">generate_tnfd_report</span>(req: TNFDReportRequest) -> dict:
+    <span class="cc"># 1. Get threatened species in locations from IUCN data</span>
+    species = db.get_threatened_species_by_country(req.locations)
+    
+    <span class="cc"># 2. Get CE interventions for each species</span>
+    interventions = [get_evidence_for_species(s) <span class="ck">for</span> s <span class="ck">in</span> species[:10]]
+    
+    <span class="cc"># 3. Generate TNFD-aligned narrative with Gemma 4</span>
+    narrative = synthesise_tnfd_narrative(req, species, interventions)
+    
+    <span class="cc"># 4. Return structured JSON for PDF rendering</span>
+    <span class="ck">return</span> {<span class="cs">"tnfd_leap_section"</span>: narrative, <span class="cs">"evidence_table"</span>: interventions}</div>
+          <div class="step-tags"><span class="tag tag-model">gemma4:e4b</span><span class="tag tag-data">IUCN data</span><span class="tag tag-lib">fastapi</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Switch Ollama to cloud inference for deployment</div>
+          <div class="step-desc">Local Ollama works for development but can't run on Streamlit Cloud or any cloud host. For deployed production, route LLM calls to Hugging Face Inference API (free tier) or Groq API (free, fast). One config variable swap.</div>
+          <div class="code"><span class="cc"># config.py — one variable controls local vs cloud</span>
+LLM_BACKEND = os.getenv(<span class="cs">"LLM_BACKEND"</span>, <span class="cs">"ollama"</span>)
+
+<span class="ck">def</span> <span class="cf">get_llm_client</span>():
+    <span class="ck">if</span> LLM_BACKEND == <span class="cs">"ollama"</span>:
+        <span class="ck">from</span> langchain_ollama <span class="ck">import</span> OllamaLLM
+        <span class="ck">return</span> OllamaLLM(model=<span class="cs">"gemma4:e4b"</span>, temperature=0.05)
+    <span class="ck">elif</span> LLM_BACKEND == <span class="cs">"groq"</span>:          <span class="cc"># free tier, very fast</span>
+        <span class="ck">from</span> langchain_groq <span class="ck">import</span> ChatGroq
+        <span class="ck">return</span> ChatGroq(model=<span class="cs">"gemma2-9b-it"</span>, temperature=0.05)
+    <span class="ck">elif</span> LLM_BACKEND == <span class="cs">"huggingface"</span>:   <span class="cc"># free tier</span>
+        <span class="ck">from</span> langchain_huggingface <span class="ck">import</span> HuggingFaceEndpoint
+        <span class="ck">return</span> HuggingFaceEndpoint(repo_id=<span class="cs">"google/gemma-4-e4b-it"</span>)</div>
+          <div class="callout callout-info"><span class="callout-icon">ℹ️</span>This is the harness advantage: because Gemma 4 is a swappable component, your migration from local to cloud inference is one environment variable change — not a rewrite.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T5.1 — API Contract Testing</div><div class="test-badge tb-int">Integration</div></div>
+        <div class="check">All FastAPI endpoints return correct Pydantic schemas: <span class="thresh th-pass">100%</span></div>
+        <div class="check">POST /api/v1/evidence returns EvidenceSynthesis with all required fields</div>
+        <div class="check">Invalid input (missing question field) returns 422, not 500</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T5.2 — Project Alert Pipeline</div><div class="test-badge tb-int">Integration</div></div>
+        <div class="check">Register test project → run ingestion agent → confirm alert queued within 24h</div>
+        <div class="check">Alert email sent to test address with correct paper title and project name</div>
+        <div class="check">Duplicate alert prevention: same paper not queued twice for same project</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T5.3 — TNFD Report Quality</div><div class="test-badge tb-acc">Domain Accuracy</div></div>
+        <div class="check">Generate 3 reports (agriculture/Kenya, mining/Indonesia, finance/global)</div>
+        <div class="check">Each report must cite ≥3 CE-grounded interventions: <span class="thresh th-pass">3/3 reports</span></div>
+        <div class="check">Have 1 domain expert review — are recommendations evidence-based and sector-relevant?</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T5.4 — Cloud LLM Backend Swap</div><div class="test-badge tb-int">Portability</div></div>
+        <div class="check">Set LLM_BACKEND=groq — re-run eval dataset: must score within 10% of Ollama baseline</div>
+        <div class="check">Confirms harness architecture works across backends</div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 5 Gate — Platform Backend Complete</div>
+    <div class="del-grid">
+      <div class="del-item">FastAPI serving all endpoints</div>
+      <div class="del-item">User auth working</div>
+      <div class="del-item">Project registry built</div>
+      <div class="del-item">Alert pipeline end-to-end</div>
+      <div class="del-item">TNFD module generating reports</div>
+      <div class="del-item">Cloud LLM backend tested</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 6
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-ui" id="p6">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">6</div>
+      <div class="phase-meta">
+        <div class="phase-tag">User Interface · Weeks 15–18</div>
+        <div class="phase-title">User Interface &amp; Beta</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">3 weeks</span>
+          <span class="badge badge-st">5 steps</span>
+          <span class="badge badge-tst">4 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective"><strong>Users never see the pipeline.</strong> They see a clean interface that asks: "What are you working on?" and delivers evidence, ratings, and alerts. The entire platform is invisible. Practitioners interact only with this layer.</div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Build the Streamlit interface — three views</div>
+          <div class="code"><span class="cc"># app/main.py — the entire practitioner interface</span>
+<span class="ck">import</span> streamlit <span class="ck">as</span> st
+<span class="ck">import</span> requests
+
+st.set_page_config(page_title=<span class="cs">"CEIP"</span>, page_icon=<span class="cs">"🌿"</span>, layout=<span class="cs">"wide"</span>)
+
+page = st.sidebar.radio(<span class="cs">"Navigate"</span>,
+    [<span class="cs">"🔍 Evidence Search"</span>, <span class="cs">"📋 My Projects"</span>, <span class="cs">"📊 Species Explorer"</span>])
+
+<span class="ck">if</span> page == <span class="cs">"🔍 Evidence Search"</span>:
+    st.title(<span class="cs">"Conservation Evidence Search"</span>)
+    st.caption(<span class="cs">"Ask what conservation interventions work — get cited evidence instantly"</span>)
+
+    question = st.text_area(<span class="cs">"Your question"</span>,
+        placeholder=<span class="cs">"e.g. What works for reducing human-elephant conflict in East Africa?"</span>)
+    col1, col2 = st.columns(2)
+    species  = col1.text_input(<span class="cs">"Species / taxon (optional)"</span>)
+    location = col2.text_input(<span class="cs">"Location (optional)"</span>)
+
+    <span class="ck">if</span> st.button(<span class="cs">"🔎 Search Evidence"</span>, type=<span class="cs">"primary"</span>) <span class="ck">and</span> question:
+        <span class="ck">with</span> st.spinner(<span class="cs">"Synthesising evidence from the literature..."</span>):
+            result = requests.post(<span class="cs">"http://localhost:8000/api/v1/evidence"</span>,
+                json={<span class="cs">"question"</span>: question, <span class="cs">"species"</span>: species,
+                      <span class="cs">"location"</span>: location}).json()
+
+        <span class="cc"># Display evidence synthesis</span>
+        confidence_colours = {<span class="cs">"strong"</span>:<span class="cs">"🟢"</span>,<span class="cs">"moderate"</span>:<span class="cs">"🟡"</span>,
+                               <span class="cs">"weak"</span>:<span class="cs">"🟠"</span>,<span class="cs">"none"</span>:<span class="cs">"🔴"</span>}
+        st.info(<span class="cs">f"{confidence_colours[result['confidence']]} Evidence strength: {result['confidence'].upper()}"</span>)
+        st.markdown(result[<span class="cs">'answer'</span>])
+
+        <span class="cc"># Conservation Evidence ratings</span>
+        <span class="ck">if</span> result[<span class="cs">'interventions'</span>]:
+            st.subheader(<span class="cs">"Conservation Evidence Ratings"</span>)
+            <span class="ck">for</span> iv <span class="ck">in</span> result[<span class="cs">'interventions'</span>]:
+                col1, col2, col3 = st.columns([3,1,1])
+                col1.write(iv[<span class="cs">'name'</span>])
+                col2.metric(<span class="cs">"CE Score"</span>, <span class="cs">f"{iv['effectiveness_pct']:.0f}%"</span> <span class="ck">if</span> iv.get(<span class="cs">'effectiveness_pct'</span>) <span class="ck">else</span> <span class="cs">"N/A"</span>)
+                col3.write(iv[<span class="cs">'ce_category'</span>] <span class="ck">or</span> <span class="cs">"—"</span>)
+
+        <span class="cc"># Source citations</span>
+        st.subheader(<span class="cs">"Sources"</span>)
+        <span class="ck">for</span> c <span class="ck">in</span> result[<span class="cs">'citations'</span>]:
+            st.caption(<span class="cs">f"[{c['index']}] {c['title']} ({c['year'] or '?'})"</span>)
+
+        <span class="cc"># Feedback — feeds your improvement loop</span>
+        st.divider()
+        fb_col1, fb_col2 = st.columns(2)
+        <span class="ck">if</span> fb_col1.button(<span class="cs">"👍 Helpful"</span>):  log_feedback(question, result, <span class="cs">"positive"</span>)
+        <span class="ck">if</span> fb_col2.button(<span class="cs">"👎 Not helpful"</span>): log_feedback(question, result, <span class="cs">"negative"</span>)</div>
+          <div class="step-tags"><span class="tag tag-lib">streamlit</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Build the My Projects dashboard</div>
+          <div class="step-desc">Users register their conservation activities. The platform shows: how many papers are relevant to their project, the latest evidence alerts, and a timeline of how the evidence for their approach has changed.</div>
+          <div class="step-tags"><span class="tag tag-lib">streamlit</span><span class="tag tag-lib">pandas</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Deploy to cloud with LLM_BACKEND=groq</div>
+          <div class="code"><span class="cc"># Option A: Streamlit Community Cloud (easiest, free)</span>
+<span class="cc"># 1. Push to GitHub (exclude data/, embeddings/, .env)</span>
+<span class="cc"># 2. share.streamlit.io → connect repo → set secrets</span>
+<span class="cc"># 3. Add: LLM_BACKEND=groq (or huggingface)</span>
+<span class="cc"># Note: ChromaDB must be pre-built and committed, or use cloud vector DB</span>
+
+<span class="cc"># Option B: Render.com (free tier — better for FastAPI)</span>
+<span class="cc"># Option C: Railway.app (free tier — good for full-stack)</span>
+
+<span class="cc"># For ChromaDB in cloud: export local embeddings to a hosted option</span>
+<span class="cc"># e.g. Chroma Cloud (free tier) or Supabase pgvector (free)</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Recruit 10 beta users from conservation networks</div>
+          <div class="step-desc">Post to WILDLABS.NET, LinkedIn conservation groups, and the Conservation Evidence Champions network. Frame as: "free evidence tool for conservation practitioners — 5 minutes to get evidence for your project." Aim for practitioners across 4+ taxa and 5+ countries.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Open beta: 2-week feedback sprint</div>
+          <div class="step-desc">Run a structured 2-week sprint. Each week: review feedback logs, identify top 3 failure patterns, fix, re-deploy. Use the query log and thumbs up/down data to drive improvements.</div>
+          <div class="code"><span class="cc"># Beta feedback analysis — run weekly</span>
+<span class="ck">import</span> pandas <span class="ck">as</span> pd
+df = pd.read_sql(<span class="cs">"SELECT * FROM query_log WHERE timestamp &gt; '7 days ago'"</span>, db)
+<span class="ck">print</span>(<span class="cs">f"Positive feedback rate: {df['user_feedback'].eq('positive').mean():.1%}"</span>)
+<span class="ck">print</span>(<span class="cs">f"Validation failure rate: {(~df['validation_passed']).mean():.1%}"</span>)
+<span class="ck">print</span>(<span class="cs">f"Zero-evidence responses: {df['confidence'].eq('none').mean():.1%}"</span>)
+<span class="cc"># Top unanswered questions → gaps to fill in data or eval set</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T6.1 — Usability: Task Completion</div><div class="test-badge tb-ux">UX</div></div>
+        <div class="check">5 people unfamiliar with the tool complete a query without help: <span class="thresh th-pass">&gt; 4/5</span></div>
+        <div class="check">Time from page load to first evidence result: <span class="thresh th-warn">&lt; 45 seconds</span></div>
+        <div class="check">No user confusion about what the confidence levels (strong/moderate/weak/none) mean</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T6.2 — Beta User Feedback</div><div class="test-badge tb-ux">User Research</div></div>
+        <div class="check">Positive feedback rate (thumbs up/down): <span class="thresh th-pass">&gt; 60%</span></div>
+        <div class="check">Collect structured feedback from ≥8 of 10 beta users after 2 weeks</div>
+        <div class="check">Identify and document top 3 most-requested missing features → Phase 7 priority list</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T6.3 — Production Reliability</div><div class="test-badge tb-perf">Reliability</div></div>
+        <div class="check">Python errors/crashes per query: <span class="thresh th-fail">&lt; 2%</span></div>
+        <div class="check">Empty answers (confidence=none for questions with known evidence): <span class="thresh th-warn">&lt; 15%</span></div>
+        <div class="check">App uptime over beta period: <span class="thresh th-pass">&gt; 95%</span></div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T6.4 — Living Agent in Production</div><div class="test-badge tb-int">System</div></div>
+        <div class="check">After first production weekly run: new papers appear in search results</div>
+        <div class="check">At least 1 beta user receives a project alert email</div>
+        <div class="check">No duplicate papers or embeddings introduced by production ingestion run</div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 6 Gate — Platform Is Live</div>
+    <div class="del-grid">
+      <div class="del-item">Streamlit app at public URL</div>
+      <div class="del-item">10 beta users recruited</div>
+      <div class="del-item">&gt;60% positive feedback</div>
+      <div class="del-item">Project alerts delivering</div>
+      <div class="del-item">Error rate &lt;2%</div>
+      <div class="del-item">Living agent running in production</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">· · ·</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PHASE 7
+═════════════════════════════════════════════════════════════ -->
+<div class="phase phase-data" id="p7">
+  <div class="phase-head">
+    <div class="phase-num-wrap">
+      <div class="phase-num">7</div>
+      <div class="phase-meta">
+        <div class="phase-tag">Production &amp; Growth · Weeks 18–22</div>
+        <div class="phase-title">Scale, Partnerships<br>&amp; First Revenue</div>
+        <div class="phase-badges">
+          <span class="badge badge-wk">4 weeks</span>
+          <span class="badge badge-st">5 steps</span>
+          <span class="badge badge-tst">2 tests</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-objective"><strong>The platform works. Now make it grow.</strong> Performance hardening, enterprise onboarding, Cambridge partnership, and the first revenue. This phase never really ends — it transitions into ongoing operations.</div>
+  <div class="phase-body">
+    <div class="steps-wrap">
+      <div class="block-label">Steps</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Performance hardening: caching &amp; response time</div>
+          <div class="code"><span class="cc"># src/api/cache.py — cache frequent queries in SQLite</span>
+<span class="ck">from</span> functools <span class="ck">import</span> lru_cache
+<span class="ck">import</span> hashlib
+
+<span class="ck">def</span> <span class="cf">cached_evidence_query</span>(question: str, context: str) -> EvidenceSynthesis | None:
+    key = hashlib.md5(<span class="cs">f"{question}{context}"</span>.encode()).hexdigest()
+    cached = db.get_cache(key)
+    <span class="ck">if</span> cached:
+        <span class="ck">return</span> EvidenceSynthesis(**cached)
+    result = route_query(question, context)
+    db.set_cache(key, result.dict(), ttl_hours=24)
+    <span class="ck">return</span> result
+
+<span class="cc"># Target: P90 latency &lt; 10s for cached queries, &lt; 30s for fresh</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Apply for grant funding</div>
+          <div class="step-desc">You now have: a live platform, 10 beta users, feedback data, practitioner validation scores, and a working eval benchmark. This is exactly what grant reviewers want to see. Apply to all three simultaneously.</div>
+          <div class="code"><span class="cc"># Priority grant applications — apply now, not later</span>
+<span class="cc"># 1. Bezos Earth Fund AI Grand Challenge</span>
+<span class="cc">#    Phase I: 2-page concept note → due rolling</span>
+<span class="cc">#    Phase II: up to $2M per team</span>
+<span class="cc">#    Key evidence: eval scores, practitioner feedback, live demo</span>
+
+<span class="cc"># 2. Google.org Impact Challenge on Climate</span>
+<span class="cc">#    $1M+ per winner, rolling applications</span>
+
+<span class="cc"># 3. Moore Foundation Conservation Science</span>
+<span class="cc">#    Letters of inquiry accepted year-round</span>
+
+<span class="cc"># 4. UKRI NERC Knowledge Exchange</span>
+<span class="cc">#    Particularly relevant for UK-based partnerships (Cambridge)</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Initiate Cambridge Conservation Evidence partnership</div>
+          <div class="step-desc">Email Professor Bill Sutherland's group directly — contact via conservationevidence.com. Frame the offer: you provide commercial product execution and AI engineering; they provide scientific credibility and the Evidence Champions distribution network. This is the partnership that transforms CEIP from a tool into a credible global platform.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-body">
+          <div class="step-title">Land first 3 enterprise pilot agreements</div>
+          <div class="step-desc">Target: 1 NGO programme team, 1 corporate sustainability team (TNFD reporter), 1 conservation funder. Offer 3-month free pilot in exchange for a case study and testimonial. First paid contract within 6 months of platform launch is realistic.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Submit to TNFD Tools Catalogue</div>
+          <div class="step-desc">The TNFD maintains a public catalogue of tools for nature-related financial disclosure. Getting listed provides instant credibility and discovery by 500+ TNFD early adopters with enterprise budgets and regulatory obligations. Submit via tnfd.global.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tests-wrap">
+      <div class="block-label">Testing Checkpoints</div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T7.1 — Load &amp; Performance</div><div class="test-badge tb-perf">Performance</div></div>
+        <div class="check">Simulate 10 concurrent users — P95 latency: <span class="thresh th-warn">&lt; 30s</span> (synthesis is slow by nature)</div>
+        <div class="check">Cached query response: <span class="thresh th-pass">&lt; 500ms</span></div>
+        <div class="check">Zero 500 errors under normal load</div>
+        <div class="check">Living agent runs cleanly without blocking the API server</div>
+      </div>
+      <div class="test-card">
+        <div class="test-header"><div class="test-name">T7.2 — Monthly Eval Re-run</div><div class="test-badge tb-acc">Ongoing Quality</div></div>
+        <div class="check">Run 20-question eval monthly — score must not regress &gt;5% from Phase 4 baseline</div>
+        <div class="check">If regression detected: check if new ingested papers introduced noise, or if cloud LLM backend changed</div>
+        <div class="check">This is now a permanent monthly fixture — your quality heartbeat</div>
+      </div>
+    </div>
+  </div>
+  <div class="delivers">
+    <div class="delivers-title">✓ Phase 7 — Platform Is a Business</div>
+    <div class="del-grid">
+      <div class="del-item">P90 latency &lt;30s</div>
+      <div class="del-item">Grant applications submitted</div>
+      <div class="del-item">Cambridge outreach initiated</div>
+      <div class="del-item">3 enterprise pilots agreed</div>
+      <div class="del-item">TNFD catalogue submitted</div>
+      <div class="del-item">Monthly eval schedule running</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FINAL SUMMARY ── -->
+<div style="background:var(--ink); padding:48px 64px; margin-top:0;">
+  <div style="font-family:var(--display); font-size:28px; color:#fff; margin-bottom:16px;">
+    The complete arc: 22 weeks, 32 checkpoints, one living platform.
+  </div>
+  <div style="font-family:var(--serif); font-size:14px; color:rgba(255,255,255,.5); max-width:680px; line-height:1.8; margin-bottom:32px;">
+    Phase 0 builds the contracts and eval dataset that govern everything above it. Phase 2 starts the living data heartbeat that never stops. Phase 4 builds intelligence that earns practitioner trust. Phase 6 wraps it so users never see the pipeline — just answers, ratings, and alerts. Phase 7 turns it into a business.
+  </div>
+  <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:16px;">
+    <div style="background:rgba(255,255,255,.06); padding:16px; border-radius:6px; border-top:2px solid #2D7A4A;">
+      <div style="font-family:var(--mono); font-size:9px; color:#7EC89A; letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px;">Intelligence</div>
+      <div style="font-family:var(--display); font-size:22px; color:#fff;">P0 – P4</div>
+      <div style="font-family:var(--serif); font-size:12px; color:rgba(255,255,255,.4); margin-top:4px;">Weeks 1–12</div>
+    </div>
+    <div style="background:rgba(255,255,255,.06); padding:16px; border-radius:6px; border-top:2px solid #1A3A6B;">
+      <div style="font-family:var(--mono); font-size:9px; color:#90BAF0; letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px;">Living Data</div>
+      <div style="font-family:var(--display); font-size:22px; color:#fff;">P2</div>
+      <div style="font-family:var(--serif); font-size:12px; color:rgba(255,255,255,.4); margin-top:4px;">Weeks 5–7 · runs forever</div>
+    </div>
+    <div style="background:rgba(255,255,255,.06); padding:16px; border-radius:6px; border-top:2px solid #4A1E6B;">
+      <div style="font-family:var(--mono); font-size:9px; color:#C090F0; letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px;">Application</div>
+      <div style="font-family:var(--display); font-size:22px; color:#fff;">P5 – P6</div>
+      <div style="font-family:var(--serif); font-size:12px; color:rgba(255,255,255,.4); margin-top:4px;">Weeks 12–18</div>
+    </div>
+    <div style="background:rgba(255,255,255,.06); padding:16px; border-radius:6px; border-top:2px solid #C4622D;">
+      <div style="font-family:var(--mono); font-size:9px; color:#F0A070; letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px;">Growth</div>
+      <div style="font-family:var(--display); font-size:22px; color:#fff;">P7</div>
+      <div style="font-family:var(--serif); font-size:12px; color:rgba(255,255,255,.4); margin-top:4px;">Weeks 18–22+</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /phases -->
+</main>
+
+<script>
+// Highlight active nav item on scroll
+const sections = document.querySelectorAll('.phase[id]');
+const navItems = document.querySelectorAll('.nav-item');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  navItems.forEach(n => {
+    n.classList.remove('active');
+    if (n.getAttribute('href') === '#' + current) n.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
