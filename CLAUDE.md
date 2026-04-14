@@ -100,13 +100,13 @@ Tell Claude Code:
 ## Current Status — UPDATE THIS EVERY SESSION
 
 ```
-Current Phase:    Phase 6 — User Interface and Beta
-Current Step:     Step 6.1 complete — next is Step 6.2
-Last completed:   Step 6.1 — Streamlit interface (3 pages, all verified)
+Current Phase:    Phase 6 — Frontend Rebuild
+Current Step:     Step 6.3 complete — Next.js + shadcn/ui frontend
+Last completed:   Step 6.3 — Full frontend rebuild (Next.js 16 + TypeScript + shadcn/ui + JWT auth)
 SQL baseline:     5/5 (Phase 1)
 Eval score:       CE=80% Dir=80% Cites=100% Conf=90% — ALL PASS (≥70% threshold)
 Beta users:       0
-Notes:            FastAPI on port 8000. /health, /api/v1/evidence, /api/v1/species/{name}, /api/v1/feedback all verified.
+Notes:            FastAPI v2.0.0 on port 8000 (25 endpoints). Next.js on port 3000 (11 routes). JWT auth, CORS, projects CRUD, alerts, species search all verified.
 ```
 
 ---
@@ -137,3 +137,5 @@ Notes:            FastAPI on port 8000. /health, /api/v1/evidence, /api/v1/speci
 | 2026-04-13 | Phase 5 | Step 5.2 | Added QueryCache table, description + alert_frequency columns to ConservationProject. All 9 tables verified. | create_all doesn't ALTER existing tables — used ALTER TABLE for new columns. |
 | 2026-04-13 | Phase 5 | Step 5.3 | Notification sender: send_alert (SMTP), process_alert_queue (batch). Graceful fallback when SMTP not configured. Marks sent=1 after processing. | SMTP_USER empty — warns but doesn't crash. Will work when credentials added. |
 | 2026-04-13 | Phase 6 | Step 6.1 | Streamlit UI: 3 pages (Evidence Search, My Projects placeholder, Species Explorer). Calls FastAPI backend. Confidence icons, CE ratings, citations, feedback buttons. | Timeout set to 300s for local LLM; will drop with Groq. |
+| 2026-04-13 | Phase 6 | Step 6.2 | Git init, initial commit (43 files), pushed to github.com/zakherbouragaoui/ceip. .gitignore excludes .env, data/, venv/, .claude/. | Streamlit Cloud deployment is manual (remaining). |
+| 2026-04-13 | Phase 6 | Step 6.3 | Full frontend rebuild: Next.js 16 + TypeScript + shadcn/ui + Tailwind. 11 routes, 25 API endpoints, JWT auth, CORS, projects CRUD, alerts, species search. | passlib incompatible with bcrypt 5.0 on Python 3.13 — used bcrypt directly. shadcn uses Base UI (no asChild prop). |

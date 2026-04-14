@@ -65,6 +65,7 @@ def handle_query(question: str,
             confidence        = result.confidence.value,
             validation_passed = validation["valid"],
             orphan_cites      = len(validation["orphan_cites"]),
+            user_id           = int(user_id) if user_id else None,
             latency_ms        = latency_ms,
             model             = "gemma4:e4b",
             timestamp         = datetime.utcnow().isoformat()

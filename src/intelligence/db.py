@@ -28,6 +28,15 @@ def get_session():
         session.close()
 
 
+class User(Base):
+    __tablename__ = "users"
+    id            = Column(Integer, primary_key=True)
+    email         = Column(String, unique=True)
+    name          = Column(String)
+    password_hash = Column(String)
+    created_at    = Column(String)
+
+
 class Paper(Base):
     __tablename__     = "papers"
     id                = Column(String, primary_key=True)   # DOI
@@ -81,6 +90,7 @@ class QueryLog(Base):
     confidence         = Column(String)
     validation_passed  = Column(Boolean)
     orphan_cites       = Column(Integer)
+    user_id            = Column(Integer)
     user_feedback      = Column(String)
     latency_ms         = Column(Integer)
     model              = Column(String)
