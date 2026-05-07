@@ -9,8 +9,11 @@ from contracts.evidence import (EvidenceSynthesis, Citation,
 from loguru import logger
 
 # From RESOURCES.md AI Models section
+LLM_BACKEND      = os.getenv("LLM_BACKEND", "ollama")
 OLLAMA_BASE      = os.getenv("OLLAMA_BASE", "http://localhost:11434")
 MODEL_GENERATION = "gemma4:e4b"   # generation model from RESOURCES.md
+GROQ_API_KEY     = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL       = "gemma2-9b-it"  # Groq cloud model
 
 SYNTHESIS_PROMPT = """You are an expert conservation scientist.
 Synthesise the evidence and answer the practitioner's question directly.
@@ -141,18 +144,7 @@ def synthesise(question: str,
 
     for attempt in range(max_retries):
         try:
-            r = requests.post(
-                f"{OLLAMA_BASE}/api/generate",
-                json={
-                    "model":   MODEL_GENERATION,
-                    "prompt":  prompt,
-                    "stream":  False,
-                    "format":  "json",
-                    "options": {"temperature": 0.05}
-                },
-                timeout=180
-            )
-            raw = json.loads(r.json()["response"])
+            raw = _call_llm(prompt)
 
             # Normalize confidence field to match EvidenceStrength enum
             conf = raw.get("confidence", "none").lower()
@@ -168,3 +160,47 @@ def synthesise(question: str,
 
     logger.error("All synthesis attempts failed — returning fallback")
     return safe_fallback(question, chunks)
+
+
+def _call_llm(prompt: str) -> dict:
+    """Call the configured LLM backend and return parsed JSON dict."""
+    if LLM_BACKEND == "groq":
+        return _call_groq(prompt)
+    return _call_ollama(prompt)
+
+
+def _call_ollama(prompt: str) -> dict:
+    """Call local Ollama for generation."""
+    r = requests.post(
+        f"{OLLAMA_BASE}/api/generate",
+        json={
+            "model":   MODEL_GENERATION,
+            "prompt":  prompt,
+            "stream":  False,
+            "format":  "json",
+            "options": {"temperature": 0.05}
+        },
+        timeout=180
+    )
+    return json.loads(r.json()["response"])
+
+
+def _call_groq(prompt: str) -> dict:
+    """Call Groq cloud API for generation."""
+    r = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": GROQ_MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.05,
+            "response_format": {"type": "json_object"},
+        },
+        timeout=60,
+    )
+    r.raise_for_status()
+    content = r.json()["choices"][0]["message"]["content"]
+    return json.loads(content)

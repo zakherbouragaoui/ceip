@@ -2,35 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Search,
-  FolderKanban,
-  Bug,
-  Settings,
-  Leaf,
-  LogOut,
-  Bell,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUnreadCount } from "@/lib/hooks/use-alerts";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
+import * as I from "@/components/ui/icons";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/evidence", label: "Evidence Search", icon: Search },
-  { href: "/projects", label: "My Projects", icon: FolderKanban },
-  { href: "/species", label: "Species Explorer", icon: Bug },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", id: "dashboard", label: "Dashboard", icon: I.Home },
+  { href: "/evidence", id: "evidence", label: "Evidence", icon: I.Book },
+  { href: "/species", id: "species", label: "Species", icon: I.Leaf },
+  { href: "/projects", id: "projects", label: "Projects", icon: I.Folder },
+  { href: "/map", id: "map", label: "Map", icon: I.Map },
+  { href: "/tnfd", id: "tnfd", label: "Reports", icon: I.FileText },
+  { href: "/digest", id: "digest", label: "Digest", icon: I.Mail },
+  { href: "/alerts", id: "alerts", label: "Alerts", icon: I.Bell },
+];
+
+const accountItems = [
+  { href: "/profile", id: "profile", label: "Profile", icon: I.User },
+  { href: "/connections", id: "connections", label: "Connections", icon: I.Link },
+  { href: "/billing", id: "billing", label: "Billing", icon: I.CreditCard },
+  { href: "/settings", id: "settings", label: "Settings", icon: I.Settings },
 ];
 
 export function AppSidebar() {
@@ -42,89 +33,75 @@ export function AppSidebar() {
   const initials = user?.name
     ? user.name
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
     : "U";
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:bg-card">
-      <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className="flex h-16 items-center gap-2 px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Leaf className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight">CEIP</span>
+    <aside className="sidebar">
+      {/* Brand */}
+      <div className="sb-brand">
+        <div className="sb-brand-mark">C</div>
+        <div>
+          <div className="sb-brand-name">CEIP</div>
+          <div className="sb-brand-sub">{user?.name ? "Workspace" : "Conservation Evidence"}</div>
         </div>
+      </div>
 
-        <Separator />
+      {/* Workspace nav */}
+      <div className="sb-section">Workspace</div>
+      {navItems.map((n) => (
+        <Link
+          key={n.id}
+          href={n.href}
+          className={`sb-link ${isActive(n.href) ? "active" : ""}`}
+        >
+          <n.icon size={16} />
+          <span>{n.label}</span>
+          {n.id === "alerts" && unreadCount ? (
+            <span
+              style={{
+                marginLeft: "auto",
+                background: "var(--clay)",
+                color: "oklch(0.97 0.01 50)",
+                fontSize: 10,
+                padding: "1px 6px",
+                borderRadius: 999,
+                fontFamily: "var(--font-mono)",
+              }}
+            >
+              {unreadCount}
+            </span>
+          ) : null}
+        </Link>
+      ))}
 
-        {/* Nav */}
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {navItems.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-                {item.label === "My Projects" && unreadCount ? (
-                  <Badge
-                    variant="destructive"
-                    className="ml-auto h-5 min-w-5 px-1 text-xs"
-                  >
-                    {unreadCount}
-                  </Badge>
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
+      {/* Account nav */}
+      <div className="sb-section">Account</div>
+      {accountItems.map((n) => (
+        <Link
+          key={n.id}
+          href={n.href}
+          className={`sb-link ${isActive(n.href) ? "active" : ""}`}
+        >
+          <n.icon size={16} />
+          <span>{n.label}</span>
+        </Link>
+      ))}
 
-        <Separator />
-
-        {/* User */}
-        <div className="p-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 text-left">
-                <p className="font-medium truncate">{user?.name ?? "User"}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {user?.email}
-                </p>
-              </div>
-              {unreadCount ? (
-                <Bell className="h-4 w-4 text-destructive" />
-              ) : null}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => window.location.href = "/settings"}>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      {/* Footer */}
+      <div className="sb-foot">
+        <div className="sb-user" onClick={logout} title="Sign out">
+          <div className="sb-user-avatar">{initials}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="sb-user-name">{user?.name ?? "User"}</div>
+            <div className="sb-user-meta">{user?.email ?? ""}</div>
+          </div>
         </div>
       </div>
     </aside>

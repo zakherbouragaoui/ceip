@@ -9,9 +9,18 @@ from sqlalchemy import (create_engine, Column, String, Float,
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
 
-DB_PATH = os.getenv("DB_PATH", "data/ceip.db")
-engine  = create_engine(f"sqlite:///{DB_PATH}")
-Base    = declarative_base()
+# Production swap: set DATABASE_URL=postgresql://user:pass@host/dbname in .env
+# Local dev uses SQLite by default (no config change needed)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    # Render provides postgres:// but SQLAlchemy 2.x requires postgresql://
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(DATABASE_URL)
+else:
+    DB_PATH = os.getenv("DB_PATH", "data/ceip.db")
+    engine  = create_engine(f"sqlite:///{DB_PATH}")
+Base = declarative_base()
 
 
 @contextmanager
@@ -137,6 +146,8 @@ class QueryCache(Base):
     cache_key     = Column(String, primary_key=True)
     result_json   = Column(Text)
     created_at    = Column(String)
+    last_accessed = Column(String)
+    hit_count     = Column(Integer, default=0)
 
 
 Base.metadata.create_all(engine)

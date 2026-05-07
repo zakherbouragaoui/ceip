@@ -1,0 +1,71 @@
+# Render.com Blueprint — CEIP Platform Backend
+# https://render.com/docs/blueprint-spec
+
+databases:
+  - name: ceip-db
+    plan: free
+    databaseName: ceip
+    user: ceip
+
+services:
+  - type: web
+    name: ceip-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # Database — auto-linked from Render PostgreSQL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ceip-db
+          property: connectionString
+
+      # LLM — use Groq cloud (no local Ollama on Render)
+      - key: LLM_BACKEND
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false  # set manually in Render dashboard
+
+      # Embeddings — HuggingFace Inference API
+      - key: EMBEDDING_BACKEND
+        value: huggingface
+      - key: HF_TOKEN
+        sync: false  # set manually in Render dashboard
+
+      # Auth
+      - key: JWT_SECRET_KEY
+        generateValue: true  # Render auto-generates a secure random value
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+
+      # CORS — set to your Vercel frontend URL
+      - key: CORS_ORIGINS
+        sync: false  # e.g. https://ceip.vercel.app
+
+      # ChromaDB — Render disk path
+      - key: CHROMA_PATH
+        value: /data/embeddings
+
+      # Email (optional)
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+
+      # External API keys (for weekly ingestion agent)
+      - key: CORE_API_KEY
+        sync: false
+      - key: OPENALEX_EMAIL
+        sync: false
+
+    disk:
+      name: ceip-data
+      mountPath: /data
+      sizeGB: 1  # ChromaDB embeddings (~600MB)

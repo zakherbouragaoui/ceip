@@ -2,8 +2,7 @@
 
 import { useRequireAuth } from "@/lib/hooks/use-auth";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { MobileNav } from "@/components/layout/mobile-nav";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Topbar } from "@/components/layout/topbar";
 
 export default function DashboardLayout({
   children,
@@ -14,27 +13,31 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="space-y-4 w-64">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
+      <div style={{
+        display: "flex",
+        height: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--bg)",
+      }}>
+        <div className="col gap-3" style={{ width: 256 }}>
+          <div className="pulse" style={{ height: 32, background: "var(--rule)", borderRadius: 6 }} />
+          <div className="pulse" style={{ height: 16, width: "75%", background: "var(--rule)", borderRadius: 4 }} />
+          <div className="pulse" style={{ height: 16, width: "50%", background: "var(--rule)", borderRadius: 4 }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="app">
       <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <MobileNav />
-        <main className="flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            {children}
-          </div>
-        </main>
-      </div>
+      <main className="app-main">
+        <Topbar />
+        <div className="shell-pad fade-in">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

@@ -23,13 +23,13 @@ from sqlalchemy import func
 
 app = FastAPI(title="CEIP API v1", version="2.0.0")
 
-# CORS
+# CORS — set CORS_ORIGINS in .env for production (comma-separated)
+_cors_origins = os.getenv("CORS_ORIGINS", "*")
+_origins = [o.strip() for o in _cors_origins.split(",")] if _cors_origins != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -179,11 +179,12 @@ async def change_password(
 
 # ──────────────────────── Evidence ────────────────────────
 
-@app.post("/api/v1/evidence", response_model=EvidenceSynthesis)
+@app.post("/api/v1/evidence")
 async def get_evidence(
     req: EvidenceRequest,
     current_user: dict = Depends(get_current_user),
 ):
+    # handle_query returns EvidenceSynthesis fields + cache_hit: bool
     result = handle_query(
         req.question, req.species, req.location,
         user_id=str(current_user["id"]),

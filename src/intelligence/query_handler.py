@@ -1,17 +1,63 @@
 # /Users/zakherfrogman/Documents/Conservation evidence/src/intelligence/query_handler.py
 
 from dotenv import load_dotenv
+import hashlib
+import json
 import time
 load_dotenv()
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.intelligence.router import classify_query, QueryType
 from src.intelligence.synthesiser import synthesise, safe_fallback
 from src.intelligence.validator import validate_synthesis
 from src.intelligence.retriever import retrieve_papers, retrieve_ce
-from src.intelligence.db import QueryLog, get_session
+from src.intelligence.db import QueryLog, QueryCache, get_session
 from contracts.evidence import EvidenceSynthesis
 from loguru import logger
+
+# Production swap: replace with Redis (CACHE_BACKEND=redis, REDIS_URL in .env)
+# and use a TTL-aware Redis client instead of SQL queries below.
+CACHE_TTL_DAYS = 7
+
+
+def _cache_key(question: str, species: str, location: str) -> str:
+    """MD5 hash of normalised query params — deterministic, fixed-length."""
+    raw = f"{question.strip().lower()}|{species.strip().lower()}|{location.strip().lower()}"
+    return hashlib.md5(raw.encode()).hexdigest()
+
+
+def _cache_get(key: str) -> EvidenceSynthesis | None:
+    """Return cached result if it exists and is within TTL, else None."""
+    with get_session() as session:
+        row = session.query(QueryCache).filter(QueryCache.cache_key == key).first()
+        if row is None:
+            return None
+        created = datetime.fromisoformat(row.created_at)
+        if datetime.utcnow() - created > timedelta(days=CACHE_TTL_DAYS):
+            session.delete(row)
+            return None
+        row.hit_count = (row.hit_count or 0) + 1
+        row.last_accessed = datetime.utcnow().isoformat()
+        return EvidenceSynthesis.model_validate_json(row.result_json)
+
+
+def _cache_put(key: str, result: EvidenceSynthesis) -> None:
+    """Store a synthesis result in the cache."""
+    with get_session() as session:
+        existing = session.query(QueryCache).filter(QueryCache.cache_key == key).first()
+        if existing:
+            existing.result_json = result.model_dump_json()
+            existing.created_at = datetime.utcnow().isoformat()
+            existing.hit_count = 0
+            existing.last_accessed = datetime.utcnow().isoformat()
+        else:
+            session.add(QueryCache(
+                cache_key     = key,
+                result_json   = result.model_dump_json(),
+                created_at    = datetime.utcnow().isoformat(),
+                last_accessed = datetime.utcnow().isoformat(),
+                hit_count     = 0,
+            ))
 
 
 def get_ce_for_context(question: str) -> list:
@@ -31,10 +77,25 @@ def get_ce_for_context(question: str) -> list:
 def handle_query(question: str,
                  species:  str = "",
                  location: str = "",
-                 user_id:  str = None) -> EvidenceSynthesis:
-    """Full pipeline: route → retrieve → synthesise → validate → log."""
+                 user_id:  str = None) -> dict:
+    """Full pipeline: cache check → route → retrieve → synthesise → validate → log.
+
+    Returns a dict with the EvidenceSynthesis fields plus cache_hit: bool.
+    """
 
     start = time.time()
+
+    # --- Cache lookup ---
+    key = _cache_key(question, species, location)
+    cached = _cache_get(key)
+    if cached is not None:
+        latency_ms = int((time.time() - start) * 1000)
+        logger.info(f"Cache HIT for '{question[:50]}...' ({latency_ms}ms)")
+        out = cached.model_dump()
+        out["cache_hit"] = True
+        return out
+
+    # --- Full pipeline on cache miss ---
     qtype = classify_query(question)
     chunks = []
 
@@ -56,7 +117,10 @@ def handle_query(question: str,
     validation = validate_synthesis(result, chunks)
     latency_ms = int((time.time() - start) * 1000)
 
-    # Log query to database
+    # --- Store in cache ---
+    _cache_put(key, result)
+
+    # --- Log query to database ---
     with get_session() as session:
         session.add(QueryLog(
             question          = question,
@@ -72,10 +136,12 @@ def handle_query(question: str,
         ))
 
     logger.info(
-        f"Query [{qtype.value}] '{question[:50]}...' → "
+        f"Cache MISS [{qtype.value}] '{question[:50]}...' → "
         f"confidence={result.confidence.value}, "
         f"valid={validation['valid']}, "
         f"{latency_ms}ms"
     )
 
-    return result
+    out = result.model_dump()
+    out["cache_hit"] = False
+    return out
