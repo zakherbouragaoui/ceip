@@ -1,0 +1,21 @@
+venv/
+.env
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.db
+data/
+logs/
+*.egg-info/
+dist/
+.pytest_cache/
+.git/
+frontend/
+node_modules/
+CEIP_claudedesign.zip
+New design using claude design/
+*.md
+tests/
+eval/
